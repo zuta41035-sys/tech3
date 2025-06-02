@@ -28,6 +28,7 @@ const FeaturedProduct = () => {
     <div className="mt-14">
       <div className="flex flex-col items-center">
         <p className="text-3xl font-medium">Featured Products</p>
+        <p className="text-sm text-gray-600 mt-1">Handpicked selections from Tech3 Stores</p>
         <div className="w-28 h-0.5 bg-orange-600 mt-2"></div>
       </div>
 
