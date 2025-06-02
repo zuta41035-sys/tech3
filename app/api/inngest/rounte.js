@@ -1,7 +1,7 @@
 import { serve } from "inngest/next";
-import { inngest, syncUserCreation, syncUserdeletion, syncUserupdation } from "@/config/inngest";
+import { inngest, syncUserCreation, syncUserupdation, syncUserdeletion } from "@/config/inngest";
 
-const handler = serve({
+export default serve({
   client: inngest,
   functions: [
     syncUserCreation,
@@ -9,7 +9,3 @@ const handler = serve({
     syncUserdeletion,
   ],
 });
-
-export const GET = handler.GET;
-export const POST = handler.POST;
-export const PUT = handler.PUT;
