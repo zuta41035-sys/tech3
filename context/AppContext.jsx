@@ -2,7 +2,9 @@
 import { productsDummyData, userDummyData } from "@/assets/assets";
 import { useRouter } from "next/navigation";
 import { createContext, useContext, useEffect, useState } from "react";
-import { useUser } from "@clerk/nextjs";
+import { useUser, useAuth } from "@clerk/nextjs";
+import toast from "react-hot-toast";
+import axios from "axios";
 
 export const AppContext = createContext();
 
@@ -16,6 +18,7 @@ export const AppContextProvider = (props) => {
     const router = useRouter();
 
     const { user } = useUser();
+    const {getToken} = useAuth()
 
     const [products, setProducts] = useState([]);
     const [userData, setUserData] = useState(false);
@@ -27,14 +30,27 @@ export const AppContextProvider = (props) => {
     }
 
     const fetchUserData = async () => {
-        if (!user) return;
+        try {
+            if (user?.publicMetadata?.role === 'seller') {
+                setIsSeller(true);
+            }
 
-        if (user?.publicMetadata?.role === 'seller') {
-            setIsSeller(true);
+            const token = await getToken();
+
+            const { data } = await axios.get('/api/user/data', {headers: { Authorization: `Bearer ${token}` }});
+
+            if (data.success) {
+                setUserData(data.user);
+                setCartItems(data.user.cartItems);
+            } else {
+                toast.error(data.message);
+            }
+        } catch (error) {
+            toast.error(error.message || "Something went wrong.");
+            console.error("Error fetching user data:", error);
         }
+    };
 
-        setUserData(userDummyData);
-    }
 
     const addToCart = async (itemId) => {
         let cartData = structuredClone(cartItems);
@@ -88,7 +104,7 @@ export const AppContextProvider = (props) => {
     }, [user]);
 
     const value = {
-        user,
+        user, getToken,
         currency,
         router,
         isSeller,
