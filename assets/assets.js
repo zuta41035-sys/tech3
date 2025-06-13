@@ -34,6 +34,7 @@ import MSI_Raider_image from "./MSI_Raider_image.jpg";
 import girl_with_headphone_image from "./girl_with_headphone_image.png";
 import girl_with_earphone_image from "./girl_with_earphone_image.png";
 import boy_with_laptop_image from "./boy_with_laptop_image.png";
+import upload_area from "./upload_area.png"
 import checkmark from "./checkmark.png";
 
 export const assets = {
@@ -73,6 +74,7 @@ export const assets = {
   girl_with_headphone_image,
   girl_with_earphone_image,
   boy_with_laptop_image,
+  upload_area,
   checkmark
 };
 
