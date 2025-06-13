@@ -106,7 +106,7 @@ export const HomeIcon = () => (
 export const productsDummyData = [
   
     {
-    "_id": "67a1f7c93f34a77b6dde915a",
+    "_id": "1",
     "userId": "user_2sZFHS1UIIysJyDVzCpQhUhTIhw",
     "name": "MacBook Pro 16",
     "description": "The MacBook Pro 16, powered by Apple's M2 Pro chip, offers outstanding performance with 16GB RAM and a 512GB SSD. Whether you're editing high-resolution video, developing software, or multitasking with ease, this laptop can handle the toughest tasks. It features a stunning Retina display with True Tone technology, making it a top choice for professionals in creative industries or anyone who demands premium performance in a portable form.",
@@ -118,7 +118,7 @@ export const productsDummyData = [
     "__v": 0
   }, 
     {
-    "_id": "67a1fa4b3f34a77b6dde9166",
+    "_id": "2",
     "userId": "user_2sZFHS1UIIysJyDVzCpQhUhTIhw",
     "name": "ASUS ROG Zephyrus G16",
     "description": "The ASUS ROG Zephyrus G16 gaming laptop is powered by the Intel Core i9 processor and features an RTX 4070 GPU, delivering top-tier gaming and performance. With 16GB of RAM and a 1TB SSD, this laptop is designed for gamers who demand extreme power, speed, and storage. Equipped with a stunning 16-inch display, it's built to handle the most demanding titles and applications with ease.",
@@ -130,7 +130,7 @@ export const productsDummyData = [
     "__v": 0
   },   
     {
-    "_id": "67a1f7c93f34a77b6dde915a",
+    "_id": "3",
     "userId": "user_2sZFHS1UIIysJyDVzCpQhUhTIhw",
     "name": "MSI Raider GE78 HX 14VHG 630 ",
     "description": "17” QHD+ (2560x1600, 240Hz) gaming laptop with Intel Core i9-14900HX, RTX 4080 12GB, 32GB RAM, 2TB SSD, per-key RGB keyboard, Wi-Fi 6E, Thunderbolt 4, 99.9WHr battery, 3.1kg weight, Windows 11 Home.",
@@ -142,7 +142,7 @@ export const productsDummyData = [
     "__v": 0
   },   
     {
-    "_id": "67a1f7c93f34a77b6dde915a",
+    "_id": "4",
     "userId": "user_2sZFHS1UIIysJyDVzCpQhUhTIhw",
     "name": "LENOVO V15 G4 IRU Laptop",
     "description": "13th Gen Intel Core i5-13420H - 16GB RAM ",
@@ -154,7 +154,7 @@ export const productsDummyData = [
     "__v": 0
   }, 
     {
-    "_id": "67a1f7c93f34a77b6dde915a",
+    "_id": "5",
     "userId": "user_2sZFHS1UIIysJyDVzCpQhUhTIhw",
     "name": "MSI MPG VELOX 100R Gaming PC Case",
     "description": "Brand: REDTECH Computers Warranty: 1 Year,",
@@ -166,7 +166,7 @@ export const productsDummyData = [
     "__v": 0
   },
   {
-    "_id": "67a1f85e3f34a77b6dde915e",
+    "_id": "6",
     "userId": "user_2sZFHS1UIIysJyDVzCpQhUhTIhw",
     "name": "MSI_monitor",
     "description": "23.6” curved LCD (1920x1080, 144Hz, 1ms), 16:9 aspect ratio, 250 cd/m² brightness, NTSC 85%/sRGB 110%, 178° view, 45W power, 1x DVI, 1x HDMI 1.4, 1x DP 1.2, 543×403×192mm, 3.96kg net, 5.46kg gross.",
@@ -178,7 +178,7 @@ export const productsDummyData = [
     "__v": 0
   }, 
   {
-    "_id": "67a1f85e3f34a77b6dde915e",
+    "_id": "7",
     "userId": "user_2sZFHS1UIIysJyDVzCpQhUhTIhw",
     "name": "Apple Monitor",
     "description": "Apple Studio Display- 27 5K Retina monitor with True Tone, P3 wide color, 600 nits brightness, A13 Bionic chip, 12MP ultra-wide camera, and seamless macOS integration.",
@@ -190,7 +190,7 @@ export const productsDummyData = [
     "__v": 0
   }, 
     {
-    "_id": "67a1f7c93f34a77b6dde915a",
+    "_id": "8",
     "userId": "user_2sZFHS1UIIysJyDVzCpQhUhTIhw",
     "name": "MacBook Pro 16",
     "description": "The MacBook Pro 16, powered by Apple's M2 Pro chip, offers outstanding performance with 16GB RAM and a 512GB SSD. Whether you're editing high-resolution video, developing software, or multitasking with ease, this laptop can handle the toughest tasks. It features a stunning Retina display with True Tone technology, making it a top choice for professionals in creative industries or anyone who demands premium performance in a portable form.",
@@ -202,7 +202,7 @@ export const productsDummyData = [
     "__v": 0
   },
     {
-    "_id": "67a1f7c93f34a77b6dde915a",
+    "_id": "9",
     "userId": "user_2sZFHS1UIIysJyDVzCpQhUhTIhw",
     "name": "Apple Headphones Mac",
     "description": "Apple AirPods Max – High-fidelity over-ear headphones with Active Noise Cancellation, Spatial Audio, and seamless integration with Mac, iPhone, and other Apple devices via the H1 chip.",
@@ -214,7 +214,7 @@ export const productsDummyData = [
     "__v": 0
   },
     {
-    "_id": "67a1f4e43f34a77b6dde9144",
+    "_id": "10",
     "userId": "user_2sZFHS1UIIysJyDVzCpQhUhTIhw",
     "name": "AirPods Max Headphones",
     "description": "Apple AirPods Pro (2nd Gen) with MagSafe Case (USB-C) provide excellent sound, active noise cancellation, and a comfortable fit. The USB-C case ensures quick charging, and they pair seamlessly with Apple devices for an effortless audio experience.",
