@@ -14,11 +14,11 @@ const HeaderSlider = () => {
     },
     {
       id: 2,
-      title: "Next-Level Gaming Starts Here - Discover PlayStation 5 Today!",
+      title: "Next-Level Gaming Starts Here - Discover PC build Today!",
       offer: "Hurry up only few lefts!",
       buttonText1: "Shop Now",
       buttonText2: "Explore Deals",
-      imgSrc: assets.header_playstation_image,
+      imgSrc: assets.PC_box_image,
     },
     {
       id: 3,

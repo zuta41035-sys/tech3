@@ -19,7 +19,7 @@ const products = [
     id: 3,
     image: assets.boy_with_laptop_image,
     title: "Power in Every Pixel",
-    description: "Shop the latest laptops for work, gaming, and more.",
+    description: "Shop the latest laptops for work, gaming, and mores.",
   },
 ];
 
