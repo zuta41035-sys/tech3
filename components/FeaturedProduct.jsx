@@ -1,6 +1,8 @@
+'use client';
 import React from "react";
 import { assets } from "@/assets/assets";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 const products = [
   {
@@ -24,6 +26,8 @@ const products = [
 ];
 
 const FeaturedProduct = () => {
+  const router = useRouter(); 
+
   return (
     <div className="mt-14">
       <div className="flex flex-col items-center">
@@ -42,11 +46,13 @@ const FeaturedProduct = () => {
             />
             <div className="group-hover:-translate-y-4 transition duration-300 absolute bottom-8 left-8 text-white space-y-2">
               <p className="font-medium text-xl lg:text-2xl">{title}</p>
-              <p className="text-sm lg:text-base leading-5 max-w-60">
-                {description}
-              </p>
-              <button className="flex items-center gap-1.5 bg-orange-600 px-4 py-2 rounded">
-                Buy now <Image className="h-3 w-3" src={assets.redirect_icon} alt="Redirect Icon" />
+              <p className="text-sm lg:text-base leading-5 max-w-60">{description}</p>
+              <button
+                className="flex items-center gap-1.5 bg-orange-600 px-4 py-2 rounded"
+                onClick={() => router.push('/all-products')} 
+              >
+                Buy now
+                <Image className="h-3 w-3" src={assets.redirect_icon} alt="Redirect Icon" />
               </button>
             </div>
           </div>

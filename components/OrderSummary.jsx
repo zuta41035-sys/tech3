@@ -1,74 +1,158 @@
-import { addressDummyData } from "@/assets/assets";
+'use client';
 import { useAppContext } from "@/context/AppContext";
 import React, { useEffect, useState } from "react";
 
 const OrderSummary = () => {
+  const {
+    currency,
+    router,
+    getCartCount,
+    getCartAmount,
+    setCartItems,
+    products,
+    cartItems,
+  } = useAppContext();
 
-  const { currency, router, getCartCount, getCartAmount } = useAppContext()
-  const [selectedAddress, setSelectedAddress] = useState(null);
+  // State for address: either selected from dropdown or user inputs manually
+  const [selectedAddress, setSelectedAddress] = useState({
+    fullName: "",
+    phoneNumber: "",
+    area: "",
+    city: "",
+    // optionally more fields if needed
+  });
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-
   const [userAddresses, setUserAddresses] = useState([]);
 
-  const fetchUserAddresses = async () => {
-    setUserAddresses(addressDummyData);
-  }
+  // Build cart items list with full product info and quantity
+  const cartItemsList = Object.keys(cartItems).map((itemId) => {
+    const product = products.find((p) => p._id === itemId);
+    const quantity = cartItems[itemId];
+    return {
+      product: product || { name: "Unknown Product" },
+      quantity,
+    };
+  });
+
+  const fetchUserAddresses = () => {
+    const storedAddress = localStorage.getItem("userAddress");
+    if (storedAddress) {
+      const parsedAddress = JSON.parse(storedAddress);
+      setUserAddresses([parsedAddress]);
+    }
+  };
 
   const handleAddressSelect = (address) => {
     setSelectedAddress(address);
     setIsDropdownOpen(false);
   };
 
-  const createOrder = async () => {
+  // Handle manual input changes
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setSelectedAddress((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
 
-  }
+  const createOrder = async () => {
+    // Basic validation: check required address fields
+    if (
+      !selectedAddress.fullName.trim() ||
+      !selectedAddress.phoneNumber.trim() ||
+      !selectedAddress.area.trim() ||
+      !selectedAddress.city.trim()
+    ) {
+      alert("Please complete all shipping address fields.");
+      return;
+    }
+
+    if (cartItemsList.length === 0) {
+      alert("Your cart is empty!");
+      return;
+    }
+
+    const amount = getCartAmount() + Math.floor(getCartAmount() * 0.02);
+
+    const order = {
+      items: cartItemsList,
+      amount,
+      address: {
+        ...selectedAddress,
+        state: "N/A",
+      },
+      date: new Date().toISOString(),
+      paymentMethod: "COD",
+      paymentStatus: "Pending",
+    };
+
+    const existingOrders = JSON.parse(localStorage.getItem("userOrders")) || [];
+    localStorage.setItem("userOrders", JSON.stringify([...existingOrders, order]));
+
+    // Clear cart after order placement
+    localStorage.removeItem("cart");
+    setCartItems({});
+
+    router.push("/order-placed");
+  };
 
   useEffect(() => {
     fetchUserAddresses();
-  }, [])
+  }, []);
 
   return (
-    <div className="w-full md:w-96 bg-gray-500/5 p-5">
-      <h2 className="text-xl md:text-2xl font-medium text-gray-700">
-        Order Summary
-      </h2>
+    <div className="w-full md:w-96 bg-gray-500/5 p-5 rounded-lg">
+      <h2 className="text-xl md:text-2xl font-medium text-gray-700">Order Summary</h2>
       <hr className="border-gray-500/30 my-5" />
+
       <div className="space-y-6">
+        {/* Address Selector */}
         <div>
           <label className="text-base font-medium uppercase text-gray-600 block mb-2">
             Select Address
           </label>
-          <div className="relative inline-block w-full text-sm border">
+          <div className="relative inline-block w-full text-sm border rounded-md">
             <button
-              className="peer w-full text-left px-4 pr-2 py-2 bg-white text-gray-700 focus:outline-none"
+              className="peer w-full text-left px-4 pr-2 py-2 bg-white text-gray-700 focus:outline-none rounded-md"
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              type="button"
             >
               <span>
-                {selectedAddress
-                  ? `${selectedAddress.fullName}, ${selectedAddress.area}, ${selectedAddress.city}, ${selectedAddress.state}`
+                {selectedAddress.fullName
+                  ? `${selectedAddress.fullName}, ${selectedAddress.area}, ${selectedAddress.city}`
                   : "Select Address"}
               </span>
-              <svg className={`w-5 h-5 inline float-right transition-transform duration-200 ${isDropdownOpen ? "rotate-0" : "-rotate-90"}`}
-                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="#6B7280"
+              <svg
+                className={`w-5 h-5 inline float-right transition-transform duration-200 ${
+                  isDropdownOpen ? "rotate-0" : "-rotate-90"
+                }`}
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="#6B7280"
               >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
               </svg>
             </button>
 
             {isDropdownOpen && (
-              <ul className="absolute w-full bg-white border shadow-md mt-1 z-10 py-1.5">
+              <ul className="absolute w-full bg-white border shadow-md mt-1 z-10 py-1.5 rounded-md max-h-48 overflow-auto">
+                {userAddresses.length === 0 && (
+                  <li className="px-4 py-2 text-gray-500 cursor-default">No saved addresses</li>
+                )}
                 {userAddresses.map((address, index) => (
                   <li
                     key={index}
                     className="px-4 py-2 hover:bg-gray-500/10 cursor-pointer"
                     onClick={() => handleAddressSelect(address)}
                   >
-                    {address.fullName}, {address.area}, {address.city}, {address.state}
+                    {address.fullName}, {address.area}, {address.city}
                   </li>
                 ))}
                 <li
                   onClick={() => router.push("/add-address")}
-                  className="px-4 py-2 hover:bg-gray-500/10 cursor-pointer text-center"
+                  className="px-4 py-2 hover:bg-gray-500/10 cursor-pointer text-center text-orange-600"
                 >
                   + Add New Address
                 </li>
@@ -77,28 +161,75 @@ const OrderSummary = () => {
           </div>
         </div>
 
-        <div>
+        {/* Manual Address Inputs */}
+        <div className="space-y-3">
           <label className="text-base font-medium uppercase text-gray-600 block mb-2">
-            Promo Code
+            Enter Shipping Address
           </label>
-          <div className="flex flex-col items-start gap-3">
-            <input
-              type="text"
-              placeholder="Enter promo code"
-              className="flex-grow w-full outline-none p-2.5 text-gray-600 border"
-            />
-            <button className="bg-orange-600 text-white px-9 py-2 hover:bg-orange-700">
-              Apply
-            </button>
-          </div>
+          <input
+            type="text"
+            name="fullName"
+            placeholder="Full Name"
+            value={selectedAddress.fullName}
+            onChange={handleInputChange}
+            className="w-full p-2 border rounded-md outline-none"
+          />
+          <input
+            type="text"
+            name="phoneNumber"
+            placeholder="Phone Number"
+            value={selectedAddress.phoneNumber}
+            onChange={handleInputChange}
+            className="w-full p-2 border rounded-md outline-none"
+          />
+          <input
+            type="text"
+            name="area"
+            placeholder="Area"
+            value={selectedAddress.area}
+            onChange={handleInputChange}
+            className="w-full p-2 border rounded-md outline-none"
+          />
+          <input
+            type="text"
+            name="city"
+            placeholder="City"
+            value={selectedAddress.city}
+            onChange={handleInputChange}
+            className="w-full p-2 border rounded-md outline-none"
+          />
+        </div>
+
+        {/* Cart Items List */}
+        <div className="mb-4">
+          <h3 className="font-semibold text-gray-700 mb-2">Items in Cart</h3>
+          <ul className="max-h-40 overflow-auto border rounded-md">
+            {cartItemsList.length === 0 ? (
+              <li className="text-gray-500 p-2">Your cart is empty</li>
+            ) : (
+              cartItemsList.map(({ product, quantity }, index) => (
+                <li
+                  key={index}
+                  className="flex justify-between text-gray-700 py-2 px-3 border-b border-gray-200 last:border-b-0"
+                >
+                  <span>{product.name}</span>
+                  <span className="font-medium">x{quantity}</span>
+                </li>
+              ))
+            )}
+          </ul>
         </div>
 
         <hr className="border-gray-500/30 my-5" />
 
+        {/* Summary */}
         <div className="space-y-4">
           <div className="flex justify-between text-base font-medium">
             <p className="uppercase text-gray-600">Items {getCartCount()}</p>
-            <p className="text-gray-800">{currency}{getCartAmount()}</p>
+            <p className="text-gray-800">
+              {currency}
+              {getCartAmount()}
+            </p>
           </div>
           <div className="flex justify-between">
             <p className="text-gray-600">Shipping Fee</p>
@@ -106,16 +237,25 @@ const OrderSummary = () => {
           </div>
           <div className="flex justify-between">
             <p className="text-gray-600">Tax (2%)</p>
-            <p className="font-medium text-gray-800">{currency}{Math.floor(getCartAmount() * 0.02)}</p>
+            <p className="font-medium text-gray-800">
+              {currency}
+              {Math.floor(getCartAmount() * 0.02)}
+            </p>
           </div>
           <div className="flex justify-between text-lg md:text-xl font-medium border-t pt-3">
             <p>Total</p>
-            <p>{currency}{getCartAmount() + Math.floor(getCartAmount() * 0.02)}</p>
+            <p>
+              {currency}
+              {getCartAmount() + Math.floor(getCartAmount() * 0.02)}
+            </p>
           </div>
         </div>
       </div>
 
-      <button onClick={createOrder} className="w-full bg-orange-600 text-white py-3 mt-5 hover:bg-orange-700">
+      <button
+        onClick={createOrder}
+        className="w-full bg-orange-600 text-white py-3 mt-5 hover:bg-orange-700 rounded-md"
+      >
         Place Order
       </button>
     </div>
