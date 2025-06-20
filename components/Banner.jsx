@@ -3,10 +3,10 @@
 import React from "react";
 import { assets } from "@/assets/assets";
 import Image from "next/image";
-import { useRouter } from "next/navigation";  // Import useRouter
+import { useRouter } from "next/navigation";  
 
 const Banner = () => {
-  const router = useRouter();  // Initialize router
+  const router = useRouter(); 
 
   return (
     <div className="flex flex-col md:flex-row items-center justify-between md:pl-20 py-14 md:py-0 bg-[#E6E9F2] my-16 rounded-xl overflow-hidden">
@@ -24,7 +24,7 @@ const Banner = () => {
         </p>
         <button
           className="group flex items-center justify-center gap-1 px-12 py-2.5 bg-orange-600 rounded text-white"
-          onClick={() => router.push('/all-products')}  // Navigate on click
+          onClick={() => router.push('/all-products')}  
         >
           Shop Now
           <Image

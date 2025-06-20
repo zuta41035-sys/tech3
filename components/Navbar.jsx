@@ -35,10 +35,10 @@ const Navbar = () => {
         <Link href="/all-products" className="hover:text-gray-900 transition">
           Shop
         </Link>
-        <Link href="/" className="hover:text-gray-900 transition">
+        <Link href="/about-us" className="hover:text-gray-900 transition">
           About Us
         </Link>
-        <Link href="/" className="hover:text-gray-900 transition">
+        <Link href="/contact-us" className="hover:text-gray-900 transition">
           Contact
         </Link>
         {isSeller && (
@@ -68,9 +68,7 @@ const Navbar = () => {
         />
       </div>
 
-      {/* Right side: Cart icon with badge + Account/UserButton */}
       <div className="hidden md:flex items-center gap-4">
-        {/* Cart Icon with Badge */}
         <div
           className="relative cursor-pointer"
           onClick={() => router.push("/cart")}
@@ -84,7 +82,6 @@ const Navbar = () => {
             </span>
           )}
         </div>
-
 
         {user ? (
           <UserButton>
