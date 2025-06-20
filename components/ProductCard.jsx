@@ -26,8 +26,8 @@ const ProductCard = ({ product }) => {
         <button
           className="absolute top-2 right-2 bg-white p-2 rounded-full shadow-md"
           onClick={(e) => {
-            e.stopPropagation(); // prevent navigation to product page
-            addToCart(product._id); // add to cart without navigation
+            e.stopPropagation(); 
+            addToCart(product._id); 
           }}
           aria-label="Add to cart"
         >

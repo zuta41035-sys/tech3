@@ -31,18 +31,20 @@ const Navbar = () => {
       />
 
       <div className="flex items-center gap-4 lg:gap-8 max-md:hidden">
-        <Link href="/" className="hover:text-gray-900 transition">
-          Home
+        <Link href="/">
+          <span className="hover:text-gray-900 transition">Home</span>
         </Link>
-        <Link href="/all-products" className="hover:text-gray-900 transition">
-          Shop
+        <Link href="/all-products">
+          <span className="hover:text-gray-900 transition">Shop</span>
         </Link>
-        <Link href="/about-us" className="hover:text-gray-900 transition">
-          About Us
+        <Link href="/about-us">
+          <span className="hover:text-gray-900 transition">About Us</span>
         </Link>
-        <Link href="/contact-us" className="hover:text-gray-900 transition">
-          Contact
+        <Link href="/Contact-Us">
+          <span className="hover:text-gray-900 transition">Contact</span>
         </Link>
+
+
         {isSeller && (
           <button
             onClick={() => router.push("/seller")}

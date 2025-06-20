@@ -14,10 +14,12 @@ const SearchPage = () => {
 
   useEffect(() => {
     if (!query) {
-      setResults([]);
+      // Show all products if no search query
+      setResults(products);
       return;
     }
 
+    // Filter products by search query
     const filtered = products.filter((item) =>
       item.name.toLowerCase().includes(query.toLowerCase())
     );
@@ -28,9 +30,11 @@ const SearchPage = () => {
   return (
     <>
       <Navbar />
-      <div className="flex flex-col items-start px-6 md:px-16 lg:px-32">
+      <div className="flex flex-col items-start px-6 md:px-16 lg:px-32 min-h-screen">
         <div className="flex flex-col items-center pt-12 w-full">
-          <p className="text-2xl font-medium mb-2">Search results for: {query}</p>
+          <p className="text-2xl font-medium mb-2">
+            {query ? `Search results for: ${query}` : "All products"}
+          </p>
           <div className="w-16 h-0.5 bg-orange-600 rounded-full mb-6"></div>
 
           {results.length > 0 ? (
@@ -40,7 +44,9 @@ const SearchPage = () => {
               ))}
             </div>
           ) : (
-            <p className="text-center w-full">No results found.</p>
+            <p className="text-center w-full">
+              {query ? "No results found." : "No products available."}
+            </p>
           )}
         </div>
       </div>
