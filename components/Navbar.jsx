@@ -12,8 +12,10 @@ const Navbar = () => {
   const [searchQuery, setSearchQuery] = useState("");
 
   const handleSearch = () => {
-    if (searchQuery.trim()) {
-      router.push(`/search?query=${encodeURIComponent(searchQuery)}`);
+    const trimmed = searchQuery.trim();
+    if (trimmed) {
+      router.push(`/search?query=${encodeURIComponent(trimmed)}`);
+      setSearchQuery(""); // optional: clear input after search
     }
   };
 
@@ -58,6 +60,9 @@ const Navbar = () => {
           placeholder="Search..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") handleSearch();
+          }}
           className="outline-none text-sm px-2 py-1"
         />
         <Image

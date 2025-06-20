@@ -1,42 +1,66 @@
 "use client";
 import { useSearchParams } from "next/navigation";
+import { useAppContext } from "@/context/AppContext";
+import Navbar from "@/components/Navbar";
+import ProductCard from "@/components/ProductCard";
 import { useEffect, useState } from "react";
 
 const SearchPage = () => {
+  const { products } = useAppContext();
   const searchParams = useSearchParams();
   const query = searchParams.get("query") || "";
-  const [results, setResults] = useState([]);
+
+  const [filteredResults, setFilteredResults] = useState([]);
 
   useEffect(() => {
-    const fetchData = async () => {
-      const res = await fetch("/api/products");
-      const data = await res.json();
+    if (!query) {
+      setFilteredResults([]);
+      return;
+    }
+    if (products.length === 0) {
+      // Products not loaded yet, do nothing or show loading state
+      setFilteredResults([]);
+      return;
+    }
+    // Filter products based on query
+    const filtered = products.filter((product) =>
+      product.name.toLowerCase().includes(query.toLowerCase())
+    );
+    setFilteredResults(filtered);
+  }, [products, query]);
 
-      const filtered = data.filter((item) =>
-        item.name.toLowerCase().includes(query.toLowerCase())
-      );
-      setResults(filtered);
-    };
-
-    if (query) fetchData();
-  }, [query]);
+  // Show loading if products not yet loaded
+  if (products.length === 0) {
+    return (
+      <>
+        <Navbar />
+        <div className="p-6 text-center">Loading products...</div>
+      </>
+    );
+  }
 
   return (
-    <div className="p-4">
-      <h1 className="text-xl font-semibold mb-4">Search results for: {query}</h1>
-      {results.length > 0 ? (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {results.map((item) => (
-            <div key={item._id} className="border p-2 rounded">
-              <img src={item.image} alt={item.name} className="w-full h-32 object-cover" />
-              <p className="mt-2 text-sm font-medium">{item.name}</p>
+    <>
+      <Navbar />
+      <div className="flex flex-col items-start px-6 md:px-16 lg:px-32 min-h-screen">
+        <div className="flex flex-col items-center pt-12 w-full">
+          <p className="text-2xl font-medium mb-2">
+            Search results for: <span className="italic">{query}</span>
+          </p>
+          <div className="w-16 h-0.5 bg-orange-600 rounded-full mb-6"></div>
+
+          {filteredResults.length > 0 ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 w-full">
+              {filteredResults.map((product) => (
+                <ProductCard key={product._id} product={product} />
+              ))}
             </div>
-          ))}
+          ) : (
+            <p className="text-center w-full">No results found.</p>
+          )}
         </div>
-      ) : (
-        <p>No results found.</p>
-      )}
-    </div>
+      </div>
+    </>
   );
 };
 
