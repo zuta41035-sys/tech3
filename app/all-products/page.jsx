@@ -1,5 +1,6 @@
 "use client";
 import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 import { useAppContext } from "@/context/AppContext";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -50,6 +51,7 @@ const SearchPage = () => {
           )}
         </div>
       </div>
+      <Footer />
     </>
   );
 };

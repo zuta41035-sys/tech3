@@ -1,4 +1,4 @@
-'use client'
+"use client";
 import React from "react";
 import { assets } from "@/assets/assets";
 import OrderSummary from "@/components/OrderSummary";
@@ -7,8 +7,13 @@ import Navbar from "@/components/Navbar";
 import { useAppContext } from "@/context/AppContext";
 
 const Cart = () => {
-
   const { products, router, cartItems, addToCart, updateCartQuantity, getCartCount } = useAppContext();
+
+  const handleDecrease = (id, currentQty) => {
+    if (currentQty > 1) {
+      updateCartQuantity(id, currentQty - 1);
+    }
+  };
 
   return (
     <>
@@ -25,24 +30,15 @@ const Cart = () => {
             <table className="min-w-full table-auto">
               <thead className="text-left">
                 <tr>
-                  <th className="text-nowrap pb-6 md:px-4 px-1 text-gray-600 font-medium">
-                    Product Details
-                  </th>
-                  <th className="pb-6 md:px-4 px-1 text-gray-600 font-medium">
-                    Price
-                  </th>
-                  <th className="pb-6 md:px-4 px-1 text-gray-600 font-medium">
-                    Quantity
-                  </th>
-                  <th className="pb-6 md:px-4 px-1 text-gray-600 font-medium">
-                    Subtotal
-                  </th>
+                  <th className="text-nowrap pb-6 md:px-4 px-1 text-gray-600 font-medium">Product Details</th>
+                  <th className="pb-6 md:px-4 px-1 text-gray-600 font-medium">Price</th>
+                  <th className="pb-6 md:px-4 px-1 text-gray-600 font-medium">Quantity</th>
+                  <th className="pb-6 md:px-4 px-1 text-gray-600 font-medium">Subtotal</th>
                 </tr>
               </thead>
               <tbody>
                 {Object.keys(cartItems).map((itemId) => {
                   const product = products.find(product => product._id === itemId);
-
                   if (!product || cartItems[itemId] <= 0) return null;
 
                   return (
@@ -78,31 +74,37 @@ const Cart = () => {
                       <td className="py-4 md:px-4 px-1 text-gray-600">${product.offerPrice}</td>
                       <td className="py-4 md:px-4 px-1">
                         <div className="flex items-center md:gap-2 gap-1">
-                          <button onClick={() => updateCartQuantity(product._id, cartItems[itemId] - 1)}>
-                            <Image
-                              src={assets.decrease_arrow}
-                              alt="decrease_arrow"
-                              className="w-4 h-4"
-                            />
+                          <button onClick={() => handleDecrease(product._id, cartItems[itemId])}>
+                            <Image src={assets.decrease_arrow} alt="decrease_arrow" className="w-4 h-4" />
                           </button>
-                          <input onChange={e => updateCartQuantity(product._id, Number(e.target.value))} type="number" value={cartItems[itemId]} className="w-8 border text-center appearance-none"></input>
+                          <input
+                            type="number"
+                            value={cartItems[itemId]}
+                            min={1}
+                            onChange={e => {
+                              const val = Math.max(1, Number(e.target.value));
+                              updateCartQuantity(product._id, val);
+                            }}
+                            className="w-8 border text-center appearance-none"
+                          />
                           <button onClick={() => addToCart(product._id)}>
-                            <Image
-                              src={assets.increase_arrow}
-                              alt="increase_arrow"
-                              className="w-4 h-4"
-                            />
+                            <Image src={assets.increase_arrow} alt="increase_arrow" className="w-4 h-4" />
                           </button>
                         </div>
                       </td>
-                      <td className="py-4 md:px-4 px-1 text-gray-600">${(product.offerPrice * cartItems[itemId]).toFixed(2)}</td>
+                      <td className="py-4 md:px-4 px-1 text-gray-600">
+                        ${(product.offerPrice * cartItems[itemId]).toFixed(2)}
+                      </td>
                     </tr>
                   );
                 })}
               </tbody>
             </table>
           </div>
-          <button onClick={()=> router.push('/all-products')} className="group flex items-center mt-6 gap-2 text-orange-600">
+          <button
+            onClick={() => router.push('/all-products')}
+            className="group flex items-center mt-6 gap-2 text-orange-600"
+          >
             <Image
               className="group-hover:-translate-x-1 transition"
               src={assets.arrow_right_icon_colored}

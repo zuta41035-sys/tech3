@@ -1,12 +1,12 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { getAuth } from "@clerk/nextjs/server";
 import connectDB from "@/config/db";
+import User from "@/models/User";
 
-// GET user data
+// GET user data or create if not exist
 export async function GET(request) {
   try {
-    const { userId } = getAuth(new NextRequest(request));
-    console.log("Authenticated userId:", userId);
+    const { userId } = getAuth(request);
 
     if (!userId) {
       return NextResponse.json(
@@ -17,16 +17,19 @@ export async function GET(request) {
 
     await connectDB();
 
-    const user = await User.findById(userId);
+    let user = await User.findOne({ clerkId: userId });
 
     if (!user) {
-      return NextResponse.json(
-        { success: false, message: "User Not Found" },
-        { status: 404 }
-      );
+      user = await User.create({
+        clerkId: userId,
+        name: "New User",
+        email: "",
+        cartItems: {},
+      });
     }
 
     return NextResponse.json({ success: true, user });
+
   } catch (error) {
     console.error("Error in GET /api/user/data:", error);
     return NextResponse.json(
@@ -36,9 +39,10 @@ export async function GET(request) {
   }
 }
 
+// POST update user data
 export async function POST(request) {
   try {
-    const { userId } = getAuth(new NextRequest(request));
+    const { userId } = getAuth(request);
 
     if (!userId) {
       return NextResponse.json(
@@ -49,23 +53,28 @@ export async function POST(request) {
 
     await connectDB();
 
-    const body = await request.json();
-    const { name, email } = body;
+    const { name, email, cartItems } = await request.json();
 
-    if (!name || !email) {
+    if (!name && !email && !cartItems) {
       return NextResponse.json(
-        { success: false, message: "Missing name or email" },
+        { success: false, message: "Missing update fields" },
         { status: 400 }
       );
     }
 
-    const user = await User.findByIdAndUpdate(
-      userId,
-      { name, email },
+    const updateData = {};
+    if (name) updateData.name = name;
+    if (email) updateData.email = email;
+    if (cartItems) updateData.cartItems = cartItems;
+
+    const user = await User.findOneAndUpdate(
+      { clerkId: userId },
+      updateData,
       { new: true, upsert: true, setDefaultsOnInsert: true }
     );
 
     return NextResponse.json({ success: true, user });
+
   } catch (error) {
     console.error("Error in POST /api/user/data:", error);
     return NextResponse.json(
