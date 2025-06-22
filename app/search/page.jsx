@@ -21,18 +21,15 @@ const SearchPage = () => {
       return;
     }
     if (products.length === 0) {
-      // Products not loaded yet, do nothing or show loading state
       setFilteredResults([]);
       return;
     }
-    // Filter products based on query
     const filtered = products.filter((product) =>
       product.name.toLowerCase().includes(query.toLowerCase())
     );
     setFilteredResults(filtered);
   }, [products, query]);
 
-  // Show loading if products not yet loaded
   if (products.length === 0) {
     return (
       <>
