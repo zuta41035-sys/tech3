@@ -5,6 +5,9 @@ import Navbar from "@/components/Navbar";
 import ProductCard from "@/components/ProductCard";
 import { useEffect, useState } from "react";
 
+// Add this line to force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 const SearchPage = () => {
   const { products } = useAppContext();
   const searchParams = useSearchParams();
