@@ -5,7 +5,7 @@ import Navbar from "@/components/Navbar";
 import ProductCard from "@/components/ProductCard";
 import { useEffect, useState } from "react";
 
-// Add this line to force dynamic rendering
+// This forces the page to be dynamically rendered, preventing the build error
 export const dynamic = 'force-dynamic';
 
 const SearchPage = () => {
