@@ -1,18 +1,13 @@
-import { clerkMiddleware } from '@clerk/nextjs/server';
-import { NextResponse } from 'next/server';
+// middleware.ts
+import { clerkMiddleware } from "@clerk/nextjs/server";
+import { NextResponse } from "next/server";
 
 export default clerkMiddleware((auth, req) => {
-  try {
-    return NextResponse.next(); // ✅ Correct response
-  } catch (error) {
-    console.error('Clerk middleware error:', error);
-    return NextResponse.next(); // still allow request even if error occurs
-  }
+  return NextResponse.next();
 });
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico).*)',
-    '/(api|trpc)(.*)',
+    "/((?!_next/static|_next/image|favicon.ico).*)",
   ],
 };
