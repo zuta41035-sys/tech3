@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import mongoose from "mongoose";
-import connectDB from "@/config/db";
+import connectDB from "@/lib/db";
 import Product from "@/models/Product";
 
 export async function DELETE(request, { params }) {
