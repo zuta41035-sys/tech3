@@ -3,12 +3,10 @@ import { useSearchParams } from "next/navigation";
 import { useAppContext } from "@/context/AppContext";
 import Navbar from "@/components/Navbar";
 import ProductCard from "@/components/ProductCard";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 
-// This forces the page to be dynamically rendered, preventing the build error
-export const dynamic = 'force-dynamic';
-
-const SearchPage = () => {
+// Component that uses useSearchParams - must be wrapped in Suspense
+function SearchContent() {
   const { products } = useAppContext();
   const searchParams = useSearchParams();
   const query = searchParams.get("query") || "";
@@ -32,34 +30,55 @@ const SearchPage = () => {
 
   if (products.length === 0) {
     return (
-      <>
-        <Navbar />
-        <div className="p-6 text-center">Loading products...</div>
-      </>
+      <div className="flex flex-col items-start px-6 md:px-16 lg:px-32 min-h-screen">
+        <div className="flex flex-col items-center pt-12 w-full">
+          <div className="p-6 text-center">Loading products...</div>
+        </div>
+      </div>
     );
   }
 
   return (
+    <div className="flex flex-col items-start px-6 md:px-16 lg:px-32 min-h-screen">
+      <div className="flex flex-col items-center pt-12 w-full">
+        <p className="text-2xl font-medium mb-2">
+          Search results for: <span className="italic">{query}</span>
+        </p>
+        <div className="w-16 h-0.5 bg-orange-600 rounded-full mb-6"></div>
+
+        {filteredResults.length > 0 ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 w-full">
+            {filteredResults.map((product) => (
+              <ProductCard key={product._id} product={product} />
+            ))}
+          </div>
+        ) : (
+          <p className="text-center w-full">No results found.</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// Loading fallback component
+function SearchLoading() {
+  return (
+    <div className="flex flex-col items-start px-6 md:px-16 lg:px-32 min-h-screen">
+      <div className="flex flex-col items-center pt-12 w-full">
+        <div className="p-6 text-center">Loading search...</div>
+      </div>
+    </div>
+  );
+}
+
+// Main page component
+const SearchPage = () => {
+  return (
     <>
       <Navbar />
-      <div className="flex flex-col items-start px-6 md:px-16 lg:px-32 min-h-screen">
-        <div className="flex flex-col items-center pt-12 w-full">
-          <p className="text-2xl font-medium mb-2">
-            Search results for: <span className="italic">{query}</span>
-          </p>
-          <div className="w-16 h-0.5 bg-orange-600 rounded-full mb-6"></div>
-
-          {filteredResults.length > 0 ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 w-full">
-              {filteredResults.map((product) => (
-                <ProductCard key={product._id} product={product} />
-              ))}
-            </div>
-          ) : (
-            <p className="text-center w-full">No results found.</p>
-          )}
-        </div>
-      </div>
+      <Suspense fallback={<SearchLoading />}>
+        <SearchContent />
+      </Suspense>
     </>
   );
 };
