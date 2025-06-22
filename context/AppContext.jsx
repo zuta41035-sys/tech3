@@ -1,5 +1,4 @@
 'use client';
-import { productsDummyData } from "@/assets/assets";
 import { useRouter } from "next/navigation";
 import { createContext, useContext, useEffect, useState } from "react";
 import { useUser, useAuth } from "@clerk/nextjs";
@@ -7,7 +6,6 @@ import toast from "react-hot-toast";
 import axios from "axios";
 
 export const AppContext = createContext();
-
 export const useAppContext = () => useContext(AppContext);
 
 export const AppContextProvider = (props) => {
@@ -22,12 +20,18 @@ export const AppContextProvider = (props) => {
   const [isSeller, setIsSeller] = useState(false);
   const [cartItems, setCartItems] = useState({});
 
-  // Load dummy product data
-  const fetchProductData = () => {
-    setProducts(productsDummyData);
+  // ✅ Fetch products from backend
+  const fetchProductData = async () => {
+    try {
+      const { data } = await axios.get('/api/product'); // your MongoDB product API
+      setProducts(data);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      toast.error("Could not load products.");
+    }
   };
 
-  // Fetch user data from backend API
+  // ✅ Fetch user data from backend API
   const fetchUserData = async () => {
     try {
       if (user?.publicMetadata?.role === 'seller') {
@@ -35,7 +39,6 @@ export const AppContextProvider = (props) => {
       }
 
       const token = await getToken();
-
       const { data } = await axios.get('/api/user/data', {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -52,7 +55,7 @@ export const AppContextProvider = (props) => {
     }
   };
 
-  // Save cartItems to backend
+  // ✅ Save cartItems to backend
   const saveCart = async (cartData) => {
     try {
       const token = await getToken();
@@ -67,7 +70,7 @@ export const AppContextProvider = (props) => {
     }
   };
 
-  // Add an item to cart (increase qty or add new)
+  // ✅ Add an item to cart
   const addToCart = async (itemId) => {
     const updatedCart = { ...cartItems };
     updatedCart[itemId] = (updatedCart[itemId] || 0) + 1;
@@ -75,7 +78,7 @@ export const AppContextProvider = (props) => {
     await saveCart(updatedCart);
   };
 
-  // Update cart item quantity or remove if qty=0
+  // ✅ Update cart item quantity
   const updateCartQuantity = async (itemId, quantity) => {
     const updatedCart = { ...cartItems };
     if (quantity <= 0) {
@@ -87,12 +90,12 @@ export const AppContextProvider = (props) => {
     await saveCart(updatedCart);
   };
 
-  // Get total quantity count in cart
+  // ✅ Get cart item count
   const getCartCount = () => {
     return Object.values(cartItems).reduce((sum, qty) => sum + qty, 0);
   };
 
-  // Get total cart price amount
+  // ✅ Get total cart amount
   const getCartAmount = () => {
     let total = 0;
     for (const itemId in cartItems) {
@@ -101,15 +104,16 @@ export const AppContextProvider = (props) => {
         total += (product.offerPrice || 0) * cartItems[itemId];
       }
     }
-    return Math.round(total * 100) / 100; // round to 2 decimals
+    return Math.round(total * 100) / 100;
   };
 
-  // Clear cart
+  // ✅ Clear cart
   const resetCart = async () => {
     setCartItems({});
     await saveCart({});
   };
 
+  // Load products and user data
   useEffect(() => {
     fetchProductData();
   }, []);
@@ -134,6 +138,7 @@ export const AppContextProvider = (props) => {
     userData,
     fetchUserData,
     products,
+    setProducts,
     fetchProductData,
     cartItems,
     setCartItems,

@@ -10,19 +10,19 @@ const Navbar = () => {
   const { isSeller, router, user, getCartCount } = useAppContext();
   const { openSignIn } = useClerk();
   const [searchQuery, setSearchQuery] = useState("");
+  const count = getCartCount();
 
   const handleSearch = () => {
     const trimmed = searchQuery.trim();
     if (trimmed) {
       router.push(`/search?query=${encodeURIComponent(trimmed)}`);
-      setSearchQuery(""); // optional: clear input after search
+      setSearchQuery("");
     }
   };
 
-  const count = getCartCount();
-
   return (
     <nav className="flex items-center justify-between px-6 md:px-16 lg:px-32 py-3 border-b border-gray-300 text-gray-700">
+      {/* Logo */}
       <Image
         className="cursor-pointer w-28 md:w-32"
         onClick={() => router.push("/")}
@@ -30,41 +30,31 @@ const Navbar = () => {
         alt="logo"
       />
 
+      {/* Navigation Links */}
       <div className="flex items-center gap-4 lg:gap-8 max-md:hidden">
-        <Link href="/">
-          <span className="hover:text-gray-900 transition">Home</span>
-        </Link>
-        <Link href="/all-products">
-          <span className="hover:text-gray-900 transition">Shop</span>
-        </Link>
-        <Link href="/about-us">
-          <span className="hover:text-gray-900 transition">About Us</span>
-        </Link>
-        <Link href="/Contact-Us">
-          <span className="hover:text-gray-900 transition">Contact</span>
-        </Link>
-
+        <Link href="/">Home</Link>
+        <Link href="/all-products">Shop</Link>
+        <Link href="/about-us">About Us</Link>
+        <Link href="/Contact-Us">Contact</Link>
 
         {isSeller && (
-          <button
-            onClick={() => router.push("/seller")}
-            className="text-xs border px-4 py-1.5 rounded-full"
+          <Link
+            href="/admin"
+            className="text-xs border px-4 py-1.5 rounded-full hover:bg-gray-100"
           >
             Seller Dashboard
-          </button>
+          </Link>
         )}
       </div>
 
-      {/* Search Input */}
+      {/* Search Bar */}
       <div className="hidden md:flex items-center border rounded px-2 bg-white">
         <input
           type="text"
           placeholder="Search..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") handleSearch();
-          }}
+          onKeyDown={(e) => e.key === "Enter" && handleSearch()}
           className="outline-none text-sm px-2 py-1"
         />
         <Image
@@ -75,16 +65,15 @@ const Navbar = () => {
         />
       </div>
 
+      {/* Cart & Account */}
       <div className="hidden md:flex items-center gap-4">
         <div
           className="relative cursor-pointer"
           onClick={() => router.push("/cart")}
-          aria-label="View cart"
-          title="View cart"
         >
           <CartIcon className="w-6 h-6 text-gray-700 hover:text-gray-900" />
           {count > 0 && (
-            <span className="absolute -top-1 -right-2 bg-red-600 text-white rounded-full px-1.5 text-xs font-bold select-none">
+            <span className="absolute -top-1 -right-2 bg-red-600 text-white rounded-full px-1.5 text-xs font-bold">
               {count}
             </span>
           )}
@@ -111,25 +100,23 @@ const Navbar = () => {
         )}
       </div>
 
+      {/* Mobile Nav */}
       <div className="flex items-center md:hidden gap-3">
         {isSeller && (
           <button
-            onClick={() => router.push("/seller")}
+            onClick={() => router.push("/admin")}
             className="text-xs border px-4 py-1.5 rounded-full"
           >
             Seller Dashboard
           </button>
         )}
-
         <div
           className="relative cursor-pointer p-1"
           onClick={() => router.push("/cart")}
-          aria-label="View cart"
-          title="View cart"
         >
           <CartIcon className="w-8 h-8 text-gray-700 hover:text-gray-900" />
           {count > 0 && (
-            <span className="absolute -top-1 -right-2 bg-red-600 text-white rounded-full px-1.5 text-xs font-bold select-none">
+            <span className="absolute -top-1 -right-2 bg-red-600 text-white rounded-full px-1.5 text-xs font-bold">
               {count}
             </span>
           )}

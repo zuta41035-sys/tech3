@@ -13,18 +13,15 @@ const OrderSummary = () => {
     cartItems,
   } = useAppContext();
 
-  // State for address: either selected from dropdown or user inputs manually
   const [selectedAddress, setSelectedAddress] = useState({
     fullName: "",
     phoneNumber: "",
     area: "",
     city: "",
-    // optionally more fields if needed
   });
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [userAddresses, setUserAddresses] = useState([]);
 
-  // Build cart items list with full product info and quantity
   const cartItemsList = Object.keys(cartItems).map((itemId) => {
     const product = products.find((p) => p._id === itemId);
     const quantity = cartItems[itemId];
@@ -47,7 +44,6 @@ const OrderSummary = () => {
     setIsDropdownOpen(false);
   };
 
-  // Handle manual input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setSelectedAddress((prev) => ({
@@ -57,7 +53,6 @@ const OrderSummary = () => {
   };
 
   const createOrder = async () => {
-    // Basic validation: check required address fields
     if (
       !selectedAddress.fullName.trim() ||
       !selectedAddress.phoneNumber.trim() ||
@@ -73,7 +68,7 @@ const OrderSummary = () => {
       return;
     }
 
-    const amount = getCartAmount() + Math.floor(getCartAmount() * 0.02);
+    const amount = getCartAmount(); // Removed tax calculation
 
     const order = {
       items: cartItemsList,
@@ -90,7 +85,6 @@ const OrderSummary = () => {
     const existingOrders = JSON.parse(localStorage.getItem("userOrders")) || [];
     localStorage.setItem("userOrders", JSON.stringify([...existingOrders, order]));
 
-    // Clear cart after order placement
     localStorage.removeItem("cart");
     setCartItems({});
 
@@ -235,18 +229,12 @@ const OrderSummary = () => {
             <p className="text-gray-600">Shipping Fee</p>
             <p className="font-medium text-gray-800">Free</p>
           </div>
-          <div className="flex justify-between">
-            <p className="text-gray-600">Tax (2%)</p>
-            <p className="font-medium text-gray-800">
-              {currency}
-              {Math.floor(getCartAmount() * 0.02)}
-            </p>
-          </div>
+          {/* Removed Tax Section */}
           <div className="flex justify-between text-lg md:text-xl font-medium border-t pt-3">
             <p>Total</p>
             <p>
               {currency}
-              {getCartAmount() + Math.floor(getCartAmount() * 0.02)}
+              {getCartAmount()}
             </p>
           </div>
         </div>

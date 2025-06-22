@@ -1,9 +1,11 @@
 import mongoose from "mongoose";
 
-let cached = global.mongoose;
+const globalWithMongoose = globalThis;
+
+let cached = globalWithMongoose.mongoose;
 
 if (!cached) {
-  cached = global.mongoose = { conn: null, promise: null };
+  cached = globalWithMongoose.mongoose = { conn: null, promise: null };
 }
 
 async function connectDB() {
@@ -14,9 +16,11 @@ async function connectDB() {
   if (!cached.promise) {
     const opts = {
       bufferCommands: false,
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
     };
 
-    console.log("Connecting to MongoDB with URI:", `"${process.env.MONGODB_URI}"`);
+    console.log("Connecting to MongoDB with URI:", process.env.MONGODB_URI);
 
     cached.promise = mongoose.connect(process.env.MONGODB_URI, opts)
       .then((mongoose) => mongoose)

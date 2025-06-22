@@ -1,89 +1,36 @@
-import { v2 as cloudinary } from "cloudinary";
 import { getAuth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import connectDB from "@/config/db";
-import Product from "@/models/Product"; 
-import authSeller from "@/lib/authSeller"; 
-
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
-
-export const config = {
-  api: {
-    bodyParser: false, 
-  },
-};
+import Product from "@/models/Product";
+import authSeller from "@/lib/authSeller";
 
 export async function POST(request) {
   try {
     const auth = getAuth(request);
-    console.log("Auth info:", auth);   
     const { userId } = auth;
-    if (!userId) {
-      return NextResponse.json({ success: false, message: "Unauthorized user" }, { status: 401 });
-    }
+    if (!userId) return NextResponse.json({ success: false, message: "Unauthorized user" }, { status: 401 });
 
     const isSeller = await authSeller(userId);
-    if (!isSeller) {
-      return NextResponse.json({ success: false, message: "Not authorized" }, { status: 403 });
-    }
+    if (!isSeller) return NextResponse.json({ success: false, message: "Not authorized" }, { status: 403 });
 
-    const formData = await request.formData();
-    const name = formData.get("name");
-    const description = formData.get("description");
-    const category = formData.get("category");
-    const price = formData.get("price");
-    const offerPrice = formData.get("offerPrice");
-
-    const files = formData.getAll("images"); 
-
-    if (!files || files.length === 0) {
-      return NextResponse.json({ success: false, message: "No files uploaded" })
-    }
-
-    const result = await Promise.all(
-      files.map(async (file) => {
-        const arrayBuffer = await file.arrayBuffer()
-        const buffer = Buffer.from(arrayBuffer)
-
-        return new Promise((resolve, reject) => {
-          const uploadStream = cloudinary.uploader.upload_stream(
-            { resource_type: "auto" },
-            (error, result) => {
-              if (error){
-                reject(error)
-              }else {
-                resolve(result)
-              }
-            }
-          )
-          uploadStream.end(buffer);
-        })
-      })
-    )
-
-    const images = result.map( result => result.secure_url)
+    const data = await request.json(); // Parse JSON body
 
     await connectDB();
 
     const newProduct = await Product.create({
       userId,
-      name,
-      description,
-      category,
-      price: Number(price),
-      offerPrice: Number(offerPrice),
-      images, 
-      date: Date.now(), 
-    })
+      name: data.name,
+      description: data.description,
+      category: data.category,
+      price: Number(data.price),
+      offerPrice: Number(data.offerPrice),
+      image: data.image, 
+      date: Date.now(),
+    });
 
-    return NextResponse.json(
-      { success: true, message: "Upload successful", newProduct })
+    return NextResponse.json({ success: true, message: "Upload successful", newProduct });
   } catch (error) {
     console.error("UPLOAD ERROR:", error);
-    return NextResponse.json({ success: false, message: error.message })
+    return NextResponse.json({ success: false, message: error.message });
   }
 }
