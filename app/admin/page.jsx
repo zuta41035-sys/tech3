@@ -9,7 +9,7 @@ import axios from "axios";
 const AddProduct = () => {
   const { getToken } = useAppContext();
 
-  const [files, setFiles] = useState([]);
+  const [file, setFile] = useState(null);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("Earphone");
@@ -17,32 +17,27 @@ const AddProduct = () => {
   const [offerPrice, setOfferPrice] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Clean up created object URLs on unmount or files change
+  // Clean up created object URLs on unmount or file change
   useEffect(() => {
     return () => {
-      files.forEach((file) => {
-        if (file && file.previewUrl) {
-          URL.revokeObjectURL(file.previewUrl);
-        }
-      });
+      if (file && file.previewUrl) {
+        URL.revokeObjectURL(file.previewUrl);
+      }
     };
-  }, [files]);
+  }, [file]);
 
-  const handleFileChange = (index, file) => {
-    if (!file) return;
+  const handleFileChange = (selectedFile) => {
+    if (!selectedFile) return;
 
     // Validate file type (basic)
-    if (!file.type.startsWith("image/")) {
+    if (!selectedFile.type.startsWith("image/")) {
       toast.error("Only image files are allowed.");
       return;
     }
 
     // Create a preview URL for display
-    const previewUrl = URL.createObjectURL(file);
-
-    const updatedFiles = [...files];
-    updatedFiles[index] = Object.assign(file, { previewUrl });
-    setFiles(updatedFiles);
+    const previewUrl = URL.createObjectURL(selectedFile);
+    setFile(Object.assign(selectedFile, { previewUrl }));
   };
 
   const handleSubmit = async (e) => {
@@ -53,8 +48,8 @@ const AddProduct = () => {
       return;
     }
 
-    if (files.length === 0 || files.every((f) => !f)) {
-      toast.error("Please upload at least one product image.");
+    if (!file) {
+      toast.error("Please upload a product image.");
       return;
     }
 
@@ -62,30 +57,26 @@ const AddProduct = () => {
 
     try {
       const token = await getToken();
-      const uploadedImageUrls = [];
+      let uploadedImageUrl = "";
 
-      const validFiles = files.filter((f) => f);
+      const imgForm = new FormData();
+      imgForm.append("file", file);
+      imgForm.append("upload_preset", "techs3");
 
-      for (let i = 0; i < validFiles.length; i++) {
-        const imgForm = new FormData();
-        imgForm.append("file", validFiles[i]);
-        imgForm.append("upload_preset", "techs3");
-
-        const res = await fetch(
-          "https://api.cloudinary.com/v1_1/dhecpwubj/image/upload",
-          {
-            method: "POST",
-            body: imgForm,
-          }
-        );
-
-        const data = await res.json();
-
-        if (data.secure_url) {
-          uploadedImageUrls.push(data.secure_url);
-        } else {
-          throw new Error(data.error?.message || "Image upload failed");
+      const res = await fetch(
+        "https://api.cloudinary.com/v1_1/dhecpwubj/image/upload",
+        {
+          method: "POST",
+          body: imgForm,
         }
+      );
+
+      const data = await res.json();
+
+      if (data.secure_url) {
+        uploadedImageUrl = data.secure_url;
+      } else {
+        throw new Error(data.error?.message || "Image upload failed");
       }
 
       const productData = {
@@ -94,7 +85,7 @@ const AddProduct = () => {
         category,
         price: Number(price),
         offerPrice: Number(offerPrice),
-        image: uploadedImageUrls,
+        image: [uploadedImageUrl], // Keep as array for consistency with your backend
         date: Date.now(),
       };
 
@@ -106,8 +97,8 @@ const AddProduct = () => {
 
       if (result.success) {
         toast.success(result.message);
-        // Reset form & files
-        setFiles([]);
+        // Reset form & file
+        setFile(null);
         setName("");
         setDescription("");
         setCategory("Earphone");
@@ -128,35 +119,33 @@ const AddProduct = () => {
       <form onSubmit={handleSubmit} className="md:p-10 p-4 space-y-5 max-w-lg">
         <div>
           <p className="text-base font-medium">Product Image</p>
-          <div className="flex flex-wrap items-center gap-3 mt-2">
-            {[...Array(4)].map((_, index) => (
-              <label key={index} htmlFor={`image${index}`}>
-                <input
-                  type="file"
-                  id={`image${index}`}
-                  hidden
-                  accept="image/*"
-                  onChange={(e) => handleFileChange(index, e.target.files[0])}
+          <div className="flex items-center gap-3 mt-2">
+            <label htmlFor="image">
+              <input
+                type="file"
+                id="image"
+                hidden
+                accept="image/*"
+                onChange={(e) => handleFileChange(e.target.files[0])}
+              />
+              {file?.previewUrl || assets.upload_area ? (
+                <Image
+                  className="max-w-24 cursor-pointer"
+                  src={
+                    file?.previewUrl ||
+                    assets.upload_area ||
+                    "/images/placeholder.jpg"
+                  }
+                  alt="product-image"
+                  width={100}
+                  height={100}
                 />
-                {files[index]?.previewUrl || assets.upload_area ? (
-                  <Image
-                    className="max-w-24 cursor-pointer"
-                    src={
-                      files[index]?.previewUrl ||
-                      assets.upload_area ||
-                      "/images/placeholder.jpg"
-                    }
-                    alt="product-image"
-                    width={100}
-                    height={100}
-                  />
-                ) : (
-                  <div className="w-24 h-24 bg-gray-200 flex items-center justify-center cursor-pointer rounded">
-                    <span className="text-gray-500">Upload</span>
-                  </div>
-                )}
-              </label>
-            ))}
+              ) : (
+                <div className="w-24 h-24 bg-gray-200 flex items-center justify-center cursor-pointer rounded">
+                  <span className="text-gray-500">Upload</span>
+                </div>
+              )}
+            </label>
           </div>
         </div>
 
@@ -204,12 +193,13 @@ const AddProduct = () => {
               value={category}
               disabled={loading}
             >
-              <option value="Laptop">Laptop</option>
-              <option value="PC">PC</option>
-              <option value="Monitor">Monitor</option>
-              <option value="Earphone">Earphone</option>
-              <option value="Headphone">Headphone</option>
-              <option value="Accessories">Accessories</option>
+              
+              <option value=   "Earphone" >Earphone</option>
+              <option value=  "Headphone" >Headphone</option>
+              <option value=    "Laptop"  >Laptop</option>
+              <option value=      "PC"    >PC</option>
+              <option value=   "Monitor"  >Monitor</option>
+              <option value="Accessories" >Accessories</option>
             </select>
           </div>
 

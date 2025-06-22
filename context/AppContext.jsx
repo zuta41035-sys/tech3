@@ -20,10 +20,21 @@ export const AppContextProvider = (props) => {
   const [isSeller, setIsSeller] = useState(false);
   const [cartItems, setCartItems] = useState({});
 
-  // ✅ Fetch products from backend
+  // Helper function to clean cart items
+  const cleanCartItems = (cart) => {
+    const cleaned = {};
+    Object.keys(cart || {}).forEach(itemId => {
+      if (cart[itemId] > 0) {
+        cleaned[itemId] = cart[itemId];
+      }
+    });
+    return cleaned;
+  };
+
+  // Fetch products from backend
   const fetchProductData = async () => {
     try {
-      const { data } = await axios.get('/api/product'); // your MongoDB product API
+      const { data } = await axios.get('/api/product');
       setProducts(data);
     } catch (error) {
       console.error("Error fetching products:", error);
@@ -31,7 +42,7 @@ export const AppContextProvider = (props) => {
     }
   };
 
-  // ✅ Fetch user data from backend API
+  // Fetch user data from backend API
   const fetchUserData = async () => {
     try {
       if (user?.publicMetadata?.role === 'seller') {
@@ -45,7 +56,9 @@ export const AppContextProvider = (props) => {
 
       if (data.success) {
         setUserData(data.user);
-        setCartItems(data.user.cartItems || {});
+        // Clean the cart items when loading from server
+        const cleanedCart = cleanCartItems(data.user.cartItems);
+        setCartItems(cleanedCart);
       } else {
         toast.error(data.message || "Failed to load user data.");
       }
@@ -55,13 +68,15 @@ export const AppContextProvider = (props) => {
     }
   };
 
-  // ✅ Save cartItems to backend
+  // Save cartItems to backend
   const saveCart = async (cartData) => {
     try {
       const token = await getToken();
+      // Clean cart data before saving
+      const cleanedCart = cleanCartItems(cartData);
       await axios.post(
         '/api/user/data',
-        { cartItems: cartData },
+        { cartItems: cleanedCart },
         { headers: { Authorization: `Bearer ${token}` } }
       );
     } catch (error) {
@@ -70,54 +85,70 @@ export const AppContextProvider = (props) => {
     }
   };
 
-  // ✅ Add an item to cart
+  // Add an item to cart
   const addToCart = async (itemId) => {
-    const updatedCart = { ...cartItems };
+    const updatedCart = { ...(cartItems || {}) };
     updatedCart[itemId] = (updatedCart[itemId] || 0) + 1;
-    setCartItems(updatedCart);
-    await saveCart(updatedCart);
+    const cleanedCart = cleanCartItems(updatedCart);
+    setCartItems(cleanedCart);
+    await saveCart(cleanedCart);
   };
 
-  // ✅ Update cart item quantity
+  // Update cart item quantity
   const updateCartQuantity = async (itemId, quantity) => {
-    const updatedCart = { ...cartItems };
+    const updatedCart = { ...(cartItems || {}) };
     if (quantity <= 0) {
       delete updatedCart[itemId];
     } else {
       updatedCart[itemId] = quantity;
     }
-    setCartItems(updatedCart);
-    await saveCart(updatedCart);
+    const cleanedCart = cleanCartItems(updatedCart);
+    setCartItems(cleanedCart);
+    await saveCart(cleanedCart);
   };
 
-  // ✅ Get cart item count
+  // Get cart item count - FIXED VERSION
   const getCartCount = () => {
-    return Object.values(cartItems).reduce((sum, qty) => sum + qty, 0);
+    if (!cartItems || typeof cartItems !== 'object') return 0;
+    
+    const count = Object.keys(cartItems)
+      .filter(itemId => cartItems[itemId] > 0)
+      .reduce((total, itemId) => total + cartItems[itemId], 0);
+    
+    console.log('Cart items:', cartItems); // Debug log - remove after fixing
+    console.log('Cart count:', count); // Debug log - remove after fixing
+    
+    return count;
   };
 
-  // ✅ Get total cart amount
+  // Get total cart amount
   const getCartAmount = () => {
+    if (!cartItems || products.length === 0) return 0;
+
     let total = 0;
     for (const itemId in cartItems) {
-      const product = products.find((p) => p._id === itemId);
-      if (product) {
-        total += (product.offerPrice || 0) * cartItems[itemId];
+      if (cartItems[itemId] > 0) { // Only count items with quantity > 0
+        const product = products.find((p) => p._id === itemId);
+        if (product) {
+          total += (product.offerPrice || 0) * cartItems[itemId];
+        }
       }
     }
     return Math.round(total * 100) / 100;
   };
 
-  // ✅ Clear cart
+  // Clear cart
   const resetCart = async () => {
     setCartItems({});
     await saveCart({});
   };
 
-  // Load products and user data
+  // Load products on mount
   useEffect(() => {
     fetchProductData();
   }, []);
 
+  // Load user and cart when user changes
   useEffect(() => {
     if (user) {
       fetchUserData();

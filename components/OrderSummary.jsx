@@ -8,9 +8,10 @@ const OrderSummary = () => {
     router,
     getCartCount,
     getCartAmount,
-    setCartItems,
+    resetCart,
     products,
     cartItems,
+    setCartItems, // Use setCartItems instead of removeFromCart
   } = useAppContext();
 
   const [selectedAddress, setSelectedAddress] = useState({
@@ -22,14 +23,53 @@ const OrderSummary = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [userAddresses, setUserAddresses] = useState([]);
 
-  const cartItemsList = Object.keys(cartItems).map((itemId) => {
-    const product = products.find((p) => p._id === itemId);
-    const quantity = cartItems[itemId];
-    return {
-      product: product || { name: "Unknown Product" },
-      quantity,
-    };
-  });
+  // ✅ FIXED: Filter out items that don't exist in products array
+  const cartItemsList = React.useMemo(() => {
+    if (!cartItems || typeof cartItems !== 'object') return [];
+    
+    const items = Object.keys(cartItems)
+      .filter(itemId => cartItems[itemId] > 0)
+      .map(itemId => {
+        const product = products.find(p => p._id === itemId);
+        if (!product) {
+          console.warn(`Product with ID ${itemId} not found in products array`);
+          return null; // Return null for invalid items
+        }
+        return {
+          product,
+          quantity: cartItems[itemId],
+        };
+      })
+      .filter(item => item !== null); // Remove null entries
+    
+    console.log('Valid cart items:', items);
+    console.log('All cart items:', cartItems);
+    console.log('All products:', products);
+    return items;
+  }, [cartItems, products]);
+
+  // ✅ ADDED: Clean up invalid cart items on component mount
+  useEffect(() => {
+    if (cartItems && products.length > 0 && setCartItems) {
+      const cleanedCartItems = { ...cartItems };
+      let hasChanges = false;
+      
+      Object.keys(cartItems).forEach(itemId => {
+        if (cartItems[itemId] > 0) {
+          const productExists = products.find(p => p._id === itemId);
+          if (!productExists) {
+            console.log(`Removing invalid item from cart: ${itemId}`);
+            delete cleanedCartItems[itemId];
+            hasChanges = true;
+          }
+        }
+      });
+      
+      if (hasChanges) {
+        setCartItems(cleanedCartItems);
+      }
+    }
+  }, [cartItems, products, setCartItems]);
 
   const fetchUserAddresses = () => {
     const storedAddress = localStorage.getItem("userAddress");
@@ -63,12 +103,12 @@ const OrderSummary = () => {
       return;
     }
 
-    if (cartItemsList.length === 0) {
+    if (!cartItemsList || cartItemsList.length === 0) {
       alert("Your cart is empty!");
       return;
     }
 
-    const amount = getCartAmount(); // Removed tax calculation
+    const amount = getCartAmount();
 
     const order = {
       items: cartItemsList,
@@ -85,9 +125,7 @@ const OrderSummary = () => {
     const existingOrders = JSON.parse(localStorage.getItem("userOrders")) || [];
     localStorage.setItem("userOrders", JSON.stringify([...existingOrders, order]));
 
-    localStorage.removeItem("cart");
-    setCartItems({});
-
+    await resetCart();
     router.push("/order-placed");
   };
 
@@ -203,7 +241,7 @@ const OrderSummary = () => {
             ) : (
               cartItemsList.map(({ product, quantity }, index) => (
                 <li
-                  key={index}
+                  key={product._id || index}
                   className="flex justify-between text-gray-700 py-2 px-3 border-b border-gray-200 last:border-b-0"
                 >
                   <span>{product.name}</span>
@@ -219,7 +257,7 @@ const OrderSummary = () => {
         {/* Summary */}
         <div className="space-y-4">
           <div className="flex justify-between text-base font-medium">
-            <p className="uppercase text-gray-600">Items {getCartCount()}</p>
+            <p className="uppercase text-gray-600">Items ({getCartCount()})</p>
             <p className="text-gray-800">
               {currency}
               {getCartAmount()}
@@ -229,7 +267,6 @@ const OrderSummary = () => {
             <p className="text-gray-600">Shipping Fee</p>
             <p className="font-medium text-gray-800">Free</p>
           </div>
-          {/* Removed Tax Section */}
           <div className="flex justify-between text-lg md:text-xl font-medium border-t pt-3">
             <p>Total</p>
             <p>
@@ -243,6 +280,7 @@ const OrderSummary = () => {
       <button
         onClick={createOrder}
         className="w-full bg-orange-600 text-white py-3 mt-5 hover:bg-orange-700 rounded-md"
+        disabled={cartItemsList.length === 0}
       >
         Place Order
       </button>
