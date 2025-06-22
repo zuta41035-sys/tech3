@@ -1,12 +1,12 @@
 import { clerkMiddleware } from '@clerk/nextjs/server';
+import { NextResponse } from 'next/server';
 
 export default clerkMiddleware((auth, req) => {
-
   try {
-    return;
+    return NextResponse.next(); // ✅ Correct response
   } catch (error) {
     console.error('Clerk middleware error:', error);
-    return;
+    return NextResponse.next(); // still allow request even if error occurs
   }
 });
 
