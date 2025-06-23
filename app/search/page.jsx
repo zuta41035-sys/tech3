@@ -1,7 +1,6 @@
 "use client";
 import { useSearchParams } from "next/navigation";
 import { useAppContext } from "@/context/AppContext";
-import Navbar from "@/components/Navbar";
 import ProductCard from "@/components/ProductCard";
 import { useEffect, useState, Suspense } from "react";
 
@@ -14,14 +13,11 @@ function SearchContent() {
   const [filteredResults, setFilteredResults] = useState([]);
 
   useEffect(() => {
-    if (!query) {
+    if (!query || products.length === 0) {
       setFilteredResults([]);
       return;
     }
-    if (products.length === 0) {
-      setFilteredResults([]);
-      return;
-    }
+
     const filtered = products.filter((product) =>
       product.name.toLowerCase().includes(query.toLowerCase())
     );
@@ -60,7 +56,7 @@ function SearchContent() {
   );
 }
 
-// Loading fallback component
+
 function SearchLoading() {
   return (
     <div className="flex flex-col items-start px-6 md:px-16 lg:px-32 min-h-screen">
@@ -74,12 +70,9 @@ function SearchLoading() {
 // Main page component
 const SearchPage = () => {
   return (
-    <>
-      <Navbar />
-      <Suspense fallback={<SearchLoading />}>
-        <SearchContent />
-      </Suspense>
-    </>
+    <Suspense fallback={<SearchLoading />}>
+      <SearchContent />
+    </Suspense>
   );
 };
 

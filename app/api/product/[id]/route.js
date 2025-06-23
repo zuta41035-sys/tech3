@@ -4,7 +4,8 @@ import connectDB from "@/lib/db";
 import Product from "@/models/Product";
 
 export async function DELETE(request, { params }) {
-  const { id } = params;
+  const resolvedParams = await params;  // <-- await here
+  const { id } = resolvedParams;
 
   // Validate ID format
   if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -16,7 +17,6 @@ export async function DELETE(request, { params }) {
 
   await connectDB();
 
-  // Try to delete the product by ID
   const deleted = await Product.findByIdAndDelete(id);
 
   if (!deleted) {
@@ -26,7 +26,6 @@ export async function DELETE(request, { params }) {
     );
   }
 
-  // Return success response
   return NextResponse.json(
     { success: true, message: "Product deleted successfully" },
     { status: 200 }

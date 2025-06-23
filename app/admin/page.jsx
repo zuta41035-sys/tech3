@@ -85,7 +85,7 @@ const AddProduct = () => {
         category,
         price: Number(price),
         offerPrice: Number(offerPrice),
-        image: [uploadedImageUrl], // Keep as array for consistency with your backend
+        image: [uploadedImageUrl],
         date: Date.now(),
       };
 
@@ -97,7 +97,7 @@ const AddProduct = () => {
 
       if (result.success) {
         toast.success(result.message);
-        // Reset form & file
+ 
         setFile(null);
         setName("");
         setDescription("");

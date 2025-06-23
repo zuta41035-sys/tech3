@@ -11,7 +11,7 @@ const OrderSummary = () => {
     resetCart,
     products,
     cartItems,
-    setCartItems, // Use setCartItems instead of removeFromCart
+    setCartItems,
   } = useAppContext();
 
   const [selectedAddress, setSelectedAddress] = useState({
@@ -23,7 +23,6 @@ const OrderSummary = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [userAddresses, setUserAddresses] = useState([]);
 
-  // ✅ FIXED: Filter out items that don't exist in products array
   const cartItemsList = React.useMemo(() => {
     if (!cartItems || typeof cartItems !== 'object') return [];
     
@@ -33,14 +32,14 @@ const OrderSummary = () => {
         const product = products.find(p => p._id === itemId);
         if (!product) {
           console.warn(`Product with ID ${itemId} not found in products array`);
-          return null; // Return null for invalid items
+          return null; 
         }
         return {
           product,
           quantity: cartItems[itemId],
         };
       })
-      .filter(item => item !== null); // Remove null entries
+      .filter(item => item !== null); 
     
     console.log('Valid cart items:', items);
     console.log('All cart items:', cartItems);
@@ -48,7 +47,6 @@ const OrderSummary = () => {
     return items;
   }, [cartItems, products]);
 
-  // ✅ ADDED: Clean up invalid cart items on component mount
   useEffect(() => {
     if (cartItems && products.length > 0 && setCartItems) {
       const cleanedCartItems = { ...cartItems };
@@ -139,7 +137,6 @@ const OrderSummary = () => {
       <hr className="border-gray-500/30 my-5" />
 
       <div className="space-y-6">
-        {/* Address Selector */}
         <div>
           <label className="text-base font-medium uppercase text-gray-600 block mb-2">
             Select Address
@@ -193,7 +190,6 @@ const OrderSummary = () => {
           </div>
         </div>
 
-        {/* Manual Address Inputs */}
         <div className="space-y-3">
           <label className="text-base font-medium uppercase text-gray-600 block mb-2">
             Enter Shipping Address
@@ -232,7 +228,6 @@ const OrderSummary = () => {
           />
         </div>
 
-        {/* Cart Items List */}
         <div className="mb-4">
           <h3 className="font-semibold text-gray-700 mb-2">Items in Cart</h3>
           <ul className="max-h-40 overflow-auto border rounded-md">
@@ -254,7 +249,6 @@ const OrderSummary = () => {
 
         <hr className="border-gray-500/30 my-5" />
 
-        {/* Summary */}
         <div className="space-y-4">
           <div className="flex justify-between text-base font-medium">
             <p className="uppercase text-gray-600">Items ({getCartCount()})</p>
