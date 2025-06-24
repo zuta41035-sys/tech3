@@ -9,7 +9,7 @@ cloudinary.config({
 
 export const config = {
   api: {
-    bodyParser: false,
+    bodyParser: false, // required for formidable to parse form-data
   },
 };
 
@@ -26,8 +26,7 @@ export default async function handler(req, res) {
     }
 
     try {
-      // Adjust if your frontend uses a different field name:
-      const file = files.file; 
+      const file = files.file;
       if (!file) {
         return res.status(400).json({ error: 'No file uploaded' });
       }
