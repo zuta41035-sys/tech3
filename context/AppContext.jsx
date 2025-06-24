@@ -20,7 +20,6 @@ export const AppContextProvider = (props) => {
   const [isSeller, setIsSeller] = useState(false);
   const [cartItems, setCartItems] = useState({});
 
-  // Helper function to clean cart items
   const cleanCartItems = (cart) => {
     const cleaned = {};
     Object.keys(cart || {}).forEach(itemId => {
@@ -31,7 +30,6 @@ export const AppContextProvider = (props) => {
     return cleaned;
   };
 
-  // Fetch products from backend
   const fetchProductData = async () => {
     try {
       const { data } = await axios.get('/api/product');
@@ -42,9 +40,10 @@ export const AppContextProvider = (props) => {
     }
   };
 
-  // Fetch user data from backend API
   const fetchUserData = async () => {
     try {
+      setIsSeller(false);
+
       if (user?.publicMetadata?.role === 'seller') {
         setIsSeller(true);
       }
@@ -56,7 +55,6 @@ export const AppContextProvider = (props) => {
 
       if (data.success) {
         setUserData(data.user);
-        // Clean the cart items when loading from server
         const cleanedCart = cleanCartItems(data.user.cartItems);
         setCartItems(cleanedCart);
       } else {
@@ -68,11 +66,9 @@ export const AppContextProvider = (props) => {
     }
   };
 
-  // Save cartItems to backend
   const saveCart = async (cartData) => {
     try {
       const token = await getToken();
-      // Clean cart data before saving
       const cleanedCart = cleanCartItems(cartData);
       await axios.post(
         '/api/user/data',
@@ -85,7 +81,6 @@ export const AppContextProvider = (props) => {
     }
   };
 
-  // Add an item to cart
   const addToCart = async (itemId) => {
     const updatedCart = { ...(cartItems || {}) };
     updatedCart[itemId] = (updatedCart[itemId] || 0) + 1;
@@ -94,7 +89,6 @@ export const AppContextProvider = (props) => {
     await saveCart(cleanedCart);
   };
 
-  // Update cart item quantity
   const updateCartQuantity = async (itemId, quantity) => {
     const updatedCart = { ...(cartItems || {}) };
     if (quantity <= 0) {
@@ -107,27 +101,18 @@ export const AppContextProvider = (props) => {
     await saveCart(cleanedCart);
   };
 
-  // Get cart item count - FIXED VERSION
   const getCartCount = () => {
     if (!cartItems || typeof cartItems !== 'object') return 0;
-    
-    const count = Object.keys(cartItems)
+    return Object.keys(cartItems)
       .filter(itemId => cartItems[itemId] > 0)
       .reduce((total, itemId) => total + cartItems[itemId], 0);
-    
-    console.log('Cart items:', cartItems); // Debug log - remove after fixing
-    console.log('Cart count:', count); // Debug log - remove after fixing
-    
-    return count;
   };
 
-  // Get total cart amount
   const getCartAmount = () => {
     if (!cartItems || products.length === 0) return 0;
-
     let total = 0;
     for (const itemId in cartItems) {
-      if (cartItems[itemId] > 0) { // Only count items with quantity > 0
+      if (cartItems[itemId] > 0) {
         const product = products.find((p) => p._id === itemId);
         if (product) {
           total += (product.offerPrice || 0) * cartItems[itemId];
@@ -137,18 +122,15 @@ export const AppContextProvider = (props) => {
     return Math.round(total * 100) / 100;
   };
 
-  // Clear cart
   const resetCart = async () => {
     setCartItems({});
     await saveCart({});
   };
 
-  // Load products on mount
   useEffect(() => {
     fetchProductData();
   }, []);
 
-  // Load user and cart when user changes
   useEffect(() => {
     if (user) {
       fetchUserData();
@@ -158,6 +140,8 @@ export const AppContextProvider = (props) => {
       setIsSeller(false);
     }
   }, [user]);
+
+  const isClient = !isSeller && userData?.role !== 'admin';
 
   const value = {
     user,
@@ -178,6 +162,7 @@ export const AppContextProvider = (props) => {
     getCartCount,
     getCartAmount,
     resetCart,
+    isClient,
   };
 
   return (

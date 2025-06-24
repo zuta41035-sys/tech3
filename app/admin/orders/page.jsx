@@ -1,73 +1,144 @@
 'use client';
+
 import React, { useEffect, useState } from "react";
-import { assets, orderDummyData } from "@/assets/assets";
+import { assets } from "@/assets/assets";
 import Image from "next/image";
 import { useAppContext } from "@/context/AppContext";
 import Footer from "@/components/Footer";
 import Loading from "@/components/Loading";
+import { Trash2 } from "lucide-react";
 
 const Orders = () => {
+  const { currency } = useAppContext();
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState(null);
 
-    const { currency } = useAppContext();
+  useEffect(() => {
+    fetchOrders();
+  }, []);
 
-    const [orders, setOrders] = useState([]);
-    const [loading, setLoading] = useState(true);
+  const fetchOrders = async () => {
+    try {
+      const res = await fetch("/api/order");
+      const data = await res.json();
 
-    const fetchSellerOrders = async () => {
-        setOrders(orderDummyData);
-        setLoading(false);
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || "Failed to fetch orders");
+      }
+
+      setOrders(data.orders || []);
+    } catch (error) {
+      console.error("Error fetching orders:", error.message);
+      setOrders([]);
+    } finally {
+      setLoading(false);
     }
+  };
 
-    useEffect(() => {
-        fetchSellerOrders();
-    }, []);
+  const handleDelete = async (orderId) => {
+    if (!confirm("Are you sure you want to delete this order?")) return;
 
-    return (
-        <div className="flex-1 h-screen overflow-scroll flex flex-col justify-between text-sm">
-            {loading ? <Loading /> : <div className="md:p-10 p-4 space-y-5">
-                <h2 className="text-lg font-medium">Orders</h2>
-                <div className="max-w-4xl rounded-md">
-                    {orders.map((order, index) => (
-                        <div key={index} className="flex flex-col md:flex-row gap-5 justify-between p-5 border-t border-gray-300">
-                            <div className="flex-1 flex gap-5 max-w-80">
-                                <Image
-                                    className="max-w-16 max-h-16 object-cover"
-                                    src={assets.box_icon}
-                                    alt="box_icon"
-                                />
-                                <p className="flex flex-col gap-3">
-                                    <span className="font-medium">
-                                        {order.items.map((item) => item.product.name + ` x ${item.quantity}`).join(", ")}
-                                    </span>
-                                    <span>Items : {order.items.length}</span>
-                                </p>
-                            </div>
-                            <div>
-                                <p>
-                                    <span className="font-medium">{order.address.fullName}</span>
-                                    <br />
-                                    <span >{order.address.area}</span>
-                                    <br />
-                                    <span>{`${order.address.city}, ${order.address.state}`}</span>
-                                    <br />
-                                    <span>{order.address.phoneNumber}</span>
-                                </p>
-                            </div>
-                            <p className="font-medium my-auto">{currency}{order.amount}</p>
-                            <div>
-                                <p className="flex flex-col">
-                                    <span>Method : COD</span>
-                                    <span>Date : {new Date(order.date).toLocaleDateString()}</span>
-                                    <span>Payment : Pending</span>
-                                </p>
-                            </div>
-                        </div>
-                    ))}
+    try {
+      setDeletingId(orderId);
+
+      const res = await fetch(`/api/order/${orderId}`, {
+        method: "DELETE",
+      });
+
+      let data;
+      try {
+        data = await res.json();
+      } catch {
+        const text = await res.text();
+        throw new Error(`Unexpected server response: ${text}`);
+      }
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || "Failed to delete order");
+      }
+
+      setOrders((prev) => prev.filter((order) => order._id !== orderId));
+    } catch (error) {
+      alert("Error deleting order: " + error.message);
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  return (
+    <div className="flex-1 h-screen overflow-auto flex flex-col justify-between text-sm bg-gray-50">
+      {loading ? (
+        <Loading />
+      ) : (
+        <div className="md:p-10 p-4 space-y-5 max-w-6xl mx-auto w-full">
+          <h2 className="text-lg font-medium mb-4">Orders</h2>
+
+          <div className="rounded-md border border-gray-300 divide-y divide-gray-300 bg-white shadow-sm">
+            {orders.length === 0 ? (
+              <p className="p-4 text-center text-gray-600">No orders found.</p>
+            ) : (
+              orders.map((order) => (
+                <div
+                  key={order._id}
+                  className="flex flex-col md:flex-row gap-5 justify-between p-5 items-center"
+                >
+                  <Image
+                    className="max-w-16 max-h-16 object-cover rounded"
+                    src={assets.box_icon}
+                    alt="Order Icon"
+                    width={64}
+                    height={64}
+                  />
+
+                  <div className="flex-1 flex flex-col gap-1 min-w-[200px]">
+                    <span className="font-medium text-gray-900">
+                      {order.products?.length > 0
+                        ? order.products
+                            .map((item) => `${item.name} x ${item.quantity}`)
+                            .join(", ")
+                        : "No products"}
+                    </span>
+                    <span className="text-gray-600">
+                      Items: {order.products?.length || 0}
+                    </span>
+                  </div>
+
+                  <div className="text-gray-700 min-w-[180px]">
+                    <p>
+                      <span className="font-medium">User ID:</span> {order.userId || "N/A"}
+                      <br />
+                      <span className="font-medium">Date:</span>{" "}
+                      {order.createdAt ? new Date(order.createdAt).toLocaleDateString() : "N/A"}
+                      <br />
+                      <span className="font-medium">Payment Status:</span>{" "}
+                      {order.status || "Pending"}
+                    </p>
+                  </div>
+
+                  <p className="font-semibold text-indigo-600 text-lg my-auto min-w-[80px] text-right">
+                    {currency}
+                    {order.totalAmount?.toFixed(2) || "0.00"}
+                  </p>
+
+                  <button
+                    onClick={() => handleDelete(order._id)}
+                    disabled={deletingId === order._id}
+                    className="text-red-600 hover:text-red-800 focus:outline-none"
+                    title="Delete Order"
+                  >
+                    {deletingId === order._id ? "Deleting..." : <Trash2 className="w-6 h-6" />}
+                  </button>
                 </div>
-            </div>}
-            <Footer />
+              ))
+            )}
+          </div>
         </div>
-    );
+      )}
+
+      <Footer />
+    </div>
+  );
 };
 
 export default Orders;

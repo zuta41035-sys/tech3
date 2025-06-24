@@ -4,10 +4,8 @@ import connectDB from "@/lib/db";
 import Product from "@/models/Product";
 
 export async function DELETE(request, { params }) {
-  const resolvedParams = await params;  // <-- await here
-  const { id } = resolvedParams;
+  const { id } = params;
 
-  // Validate ID format
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return NextResponse.json(
       { success: false, message: "Invalid product ID" },
@@ -30,4 +28,57 @@ export async function DELETE(request, { params }) {
     { success: true, message: "Product deleted successfully" },
     { status: 200 }
   );
+}
+
+export async function PUT(request, { params }) {
+  const { id } = params;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return NextResponse.json(
+      { success: false, message: "Invalid product ID" },
+      { status: 400 }
+    );
+  }
+
+  try {
+    await connectDB();
+
+    const body = await request.json();
+    const { name, description, price, offerPrice } = body;
+
+    // Find existing product
+    const existingProduct = await Product.findById(id);
+    if (!existingProduct) {
+      return NextResponse.json(
+        { success: false, message: "Product not found" },
+        { status: 404 }
+      );
+    }
+
+    // Update only allowed fields, keep image and category same
+    const updateData = {
+      name,
+      description,
+      price,
+      offerPrice,
+      category: existingProduct.category,
+      image: existingProduct.image,
+    };
+
+    const updated = await Product.findByIdAndUpdate(
+      id,
+      updateData,
+      { new: true, runValidators: true }
+    );
+
+    return NextResponse.json(
+      { success: true, message: "Product updated successfully", product: updated },
+      { status: 200 }
+    );
+  } catch (error) {
+    return NextResponse.json(
+      { success: false, message: error.message || "Internal server error" },
+      { status: 500 }
+    );
+  }
 }

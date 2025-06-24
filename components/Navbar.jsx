@@ -16,6 +16,9 @@ const Navbar = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const count = getCartCount();
 
+  // User is client if logged in and NOT a seller
+  const isClient = user && !isSeller;
+
   const handleSearch = () => {
     const trimmed = searchQuery.trim();
     if (trimmed) {
@@ -31,6 +34,7 @@ const Navbar = () => {
 
   return (
     <nav className="flex items-center justify-between px-6 md:px-16 lg:px-32 py-3 border-b border-gray-300 text-gray-700 bg-white">
+      {/* Logo */}
       <Link href="/">
         <Image
           src={assets.logo}
@@ -40,7 +44,7 @@ const Navbar = () => {
         />
       </Link>
 
-      {/* Navigation Links */}
+      {/* Desktop Navigation Links */}
       <div className="hidden md:flex items-center gap-6">
         <Link href="/" className={navLinkClass("/")}>
           Home
@@ -84,7 +88,7 @@ const Navbar = () => {
         />
       </div>
 
-      {/* Cart & Account */}
+      {/* Cart & User Account */}
       <div className="hidden md:flex items-center gap-4">
         <Link href="/cart" className="relative cursor-pointer">
           <CartIcon className="w-6 h-6 text-gray-700 hover:text-gray-900 transition" />
@@ -95,17 +99,22 @@ const Navbar = () => {
           )}
         </Link>
 
+        {/* Show Orders menu only for clients */}
         {user ? (
           <UserButton>
             <UserButton.MenuItems>
-              <UserButton.Action
-                label="Orders"
-                labelIcon={<BagIcon />}
-                onClick={() => router.push("/my-orders")}
-              />
+              {/* Only show Orders if user is client (not seller) */}
+              {user && !isSeller && (
+                <UserButton.Action
+                  label="Orders"
+                  labelIcon={<BagIcon />}
+                  onClick={() => router.push("/my-orders")}
+                />
+              )}
             </UserButton.MenuItems>
           </UserButton>
         ) : (
+          // Show sign-in button if not logged in
           <button
             onClick={openSignIn}
             className="flex items-center gap-2 hover:text-gray-900 transition"
@@ -114,9 +123,10 @@ const Navbar = () => {
             Account
           </button>
         )}
+
       </div>
 
-      {/* Mobile Nav */}
+      {/* Mobile Navigation */}
       <div className="flex items-center md:hidden gap-3">
         {isSeller && (
           <Link

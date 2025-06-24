@@ -18,6 +18,7 @@
     "express": "^5.1.0",
     "formidable-serverless": "^1.1.1",
     "inngest": "^3.39.1",
+    "lucide-react": "^0.523.0",
     "mongodb": "^6.17.0",
     "mongoose": "^8.16.0",
     "next": "15.2.3",

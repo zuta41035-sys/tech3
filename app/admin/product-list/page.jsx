@@ -55,7 +55,7 @@ const ProductList = () => {
     <div className="flex-1 min-h-screen flex flex-col justify-between">
       <div className="w-full md:p-10 p-4">
         <h2 className="pb-4 text-lg font-medium">All Product</h2>
-        <div className="flex flex-col items-center max-w-4xl w-full overflow-hidden rounded-md bg-white border border-gray-500/20">
+        <div className="flex flex-col items-center w-full overflow-hidden rounded-md bg-white border border-gray-500/20">
           <table className="table-fixed w-full overflow-hidden">
             <thead className="text-gray-900 text-sm text-left">
               <tr>
@@ -94,6 +94,13 @@ const ProductList = () => {
                       >
                         <span className="hidden md:block">Visit</span>
                       </button>
+                      <button
+                        onClick={() => router.push(`/admin/product-list/edit-product/${product._id}`)}
+                        className="flex items-center gap-1 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
+                      >
+                        Edit
+                      </button>
+
                       <button
                         onClick={() => handleDelete(product._id)}
                         className="flex items-center gap-1 px-3 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition"

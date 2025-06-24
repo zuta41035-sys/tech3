@@ -1,18 +1,22 @@
-'use client';
+"use client";
 import { useAppContext } from "@/context/AppContext";
 import React, { useEffect, useState } from "react";
+import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
 
 const OrderSummary = () => {
   const {
     currency,
-    router,
     getCartCount,
     getCartAmount,
     resetCart,
     products,
     cartItems,
     setCartItems,
+    user, // user object with user.id expected here
   } = useAppContext();
+
+  const router = useRouter();
 
   const [selectedAddress, setSelectedAddress] = useState({
     fullName: "",
@@ -23,59 +27,52 @@ const OrderSummary = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [userAddresses, setUserAddresses] = useState([]);
 
+  // Build cart items list from cartItems and products
   const cartItemsList = React.useMemo(() => {
-    if (!cartItems || typeof cartItems !== 'object') return [];
-    
-    const items = Object.keys(cartItems)
-      .filter(itemId => cartItems[itemId] > 0)
-      .map(itemId => {
-        const product = products.find(p => p._id === itemId);
-        if (!product) {
-          console.warn(`Product with ID ${itemId} not found in products array`);
-          return null; 
-        }
+    if (!cartItems || typeof cartItems !== "object") return [];
+
+    return Object.keys(cartItems)
+      .filter((itemId) => cartItems[itemId] > 0)
+      .map((itemId) => {
+        const product = products.find((p) => p._id === itemId);
+        if (!product) return null;
         return {
           product,
           quantity: cartItems[itemId],
         };
       })
-      .filter(item => item !== null); 
-    
-    console.log('Valid cart items:', items);
-    console.log('All cart items:', cartItems);
-    console.log('All products:', products);
-    return items;
+      .filter((item) => item !== null);
   }, [cartItems, products]);
 
   useEffect(() => {
+    // Clean cart if product missing from products list
     if (cartItems && products.length > 0 && setCartItems) {
       const cleanedCartItems = { ...cartItems };
       let hasChanges = false;
-      
-      Object.keys(cartItems).forEach(itemId => {
+
+      Object.keys(cartItems).forEach((itemId) => {
         if (cartItems[itemId] > 0) {
-          const productExists = products.find(p => p._id === itemId);
+          const productExists = products.find((p) => p._id === itemId);
           if (!productExists) {
-            console.log(`Removing invalid item from cart: ${itemId}`);
             delete cleanedCartItems[itemId];
             hasChanges = true;
           }
         }
       });
-      
+
       if (hasChanges) {
         setCartItems(cleanedCartItems);
       }
     }
   }, [cartItems, products, setCartItems]);
 
-  const fetchUserAddresses = () => {
+  useEffect(() => {
+    // Load saved address from localStorage (or replace with your API call)
     const storedAddress = localStorage.getItem("userAddress");
     if (storedAddress) {
-      const parsedAddress = JSON.parse(storedAddress);
-      setUserAddresses([parsedAddress]);
+      setUserAddresses([JSON.parse(storedAddress)]);
     }
-  };
+  }, []);
 
   const handleAddressSelect = (address) => {
     setSelectedAddress(address);
@@ -91,116 +88,113 @@ const OrderSummary = () => {
   };
 
   const createOrder = async () => {
-    if (
-      !selectedAddress.fullName.trim() ||
-      !selectedAddress.phoneNumber.trim() ||
-      !selectedAddress.area.trim() ||
-      !selectedAddress.city.trim()
-    ) {
-      alert("Please complete all shipping address fields.");
-      return;
-    }
+  if (
+    !selectedAddress.fullName.trim() ||
+    !selectedAddress.phoneNumber.trim() ||
+    !selectedAddress.area.trim() ||
+    !selectedAddress.city.trim()
+  ) {
+    toast.error("Please complete all shipping address fields.");
+    return;
+  }
 
-    if (!cartItemsList || cartItemsList.length === 0) {
-      alert("Your cart is empty!");
-      return;
-    }
+  if (cartItemsList.length === 0) {
+    toast.error("Your cart is empty!");
+    return;
+  }
 
-    const amount = getCartAmount();
+  const amount = getCartAmount();
 
-    const order = {
-      items: cartItemsList,
-      amount,
-      address: {
-        ...selectedAddress,
-        state: "N/A",
-      },
-      date: new Date().toISOString(),
-      paymentMethod: "COD",
-      paymentStatus: "Pending",
-    };
-
-    const existingOrders = JSON.parse(localStorage.getItem("userOrders")) || [];
-    localStorage.setItem("userOrders", JSON.stringify([...existingOrders, order]));
-
-    await resetCart();
-    router.push("/order-placed");
+  const order = {
+    userId: user.id, // <-- this line is important
+    items: cartItemsList.map(({ product, quantity }) => ({
+      productId: product._id,
+      name: product.name,
+      quantity,
+      price: product.price,
+    })),
+    amount: amount, // <--- must match backend key
+    address: {
+      ...selectedAddress,
+      state: "N/A",
+    },
+    paymentMethod: "COD",
+    paymentStatus: "Pending",
   };
 
-  useEffect(() => {
-    fetchUserAddresses();
-  }, []);
+  try {
+    const res = await fetch("/api/order/add", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(order),
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(errorData.message || "Failed to place order");
+    }
+
+    await resetCart();
+    toast.success("Order placed successfully!");
+    router.push("/order-placed");
+  } catch (error) {
+    toast.error(error.message);
+  }
+};
+
 
   return (
-    <div className="w-full md:w-96 bg-gray-500/5 p-5 rounded-lg">
+    <div className="w-full md:w-96 bg-gray-50 p-5 rounded-lg shadow-md">
       <h2 className="text-xl md:text-2xl font-medium text-gray-700">Order Summary</h2>
-      <hr className="border-gray-500/30 my-5" />
+      <hr className="border-gray-300 my-5" />
 
-      <div className="space-y-6">
-        <div>
-          <label className="text-base font-medium uppercase text-gray-600 block mb-2">
-            Select Address
-          </label>
-          <div className="relative inline-block w-full text-sm border rounded-md">
-            <button
-              className="peer w-full text-left px-4 pr-2 py-2 bg-white text-gray-700 focus:outline-none rounded-md"
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              type="button"
-            >
-              <span>
-                {selectedAddress.fullName
-                  ? `${selectedAddress.fullName}, ${selectedAddress.area}, ${selectedAddress.city}`
-                  : "Select Address"}
-              </span>
-              <svg
-                className={`w-5 h-5 inline float-right transition-transform duration-200 ${
-                  isDropdownOpen ? "rotate-0" : "-rotate-90"
-                }`}
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="#6B7280"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-
-            {isDropdownOpen && (
-              <ul className="absolute w-full bg-white border shadow-md mt-1 z-10 py-1.5 rounded-md max-h-48 overflow-auto">
-                {userAddresses.length === 0 && (
-                  <li className="px-4 py-2 text-gray-500 cursor-default">No saved addresses</li>
-                )}
-                {userAddresses.map((address, index) => (
-                  <li
-                    key={index}
-                    className="px-4 py-2 hover:bg-gray-500/10 cursor-pointer"
-                    onClick={() => handleAddressSelect(address)}
-                  >
-                    {address.fullName}, {address.area}, {address.city}
-                  </li>
-                ))}
+      {/* Address selection */}
+      <div className="mb-6">
+        <label className="block font-semibold mb-2">Select Address</label>
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+            className="w-full border rounded-md p-3 text-left bg-white flex justify-between items-center"
+          >
+            {selectedAddress.fullName
+              ? `${selectedAddress.fullName}, ${selectedAddress.area}, ${selectedAddress.city}`
+              : "Select Address"}
+            <span>{isDropdownOpen ? "▲" : "▼"}</span>
+          </button>
+          {isDropdownOpen && (
+            <ul className="absolute bg-white border w-full mt-1 max-h-48 overflow-auto rounded-md z-10">
+              {userAddresses.length === 0 && (
+                <li className="p-2 text-gray-500">No saved addresses</li>
+              )}
+              {userAddresses.map((addr, idx) => (
                 <li
-                  onClick={() => router.push("/add-address")}
-                  className="px-4 py-2 hover:bg-gray-500/10 cursor-pointer text-center text-orange-600"
+                  key={idx}
+                  className="p-2 cursor-pointer hover:bg-gray-100"
+                  onClick={() => handleAddressSelect(addr)}
                 >
-                  + Add New Address
+                  {addr.fullName}, {addr.area}, {addr.city}
                 </li>
-              </ul>
-            )}
-          </div>
+              ))}
+              <li
+                className="p-2 text-center text-blue-600 cursor-pointer hover:bg-gray-100"
+                onClick={() => router.push("/add-address")}
+              >
+                + Add New Address
+              </li>
+            </ul>
+          )}
         </div>
 
-        <div className="space-y-3">
-          <label className="text-base font-medium uppercase text-gray-600 block mb-2">
-            Enter Shipping Address
-          </label>
+        {/* Manual input */}
+        <div className="mt-4 space-y-2">
           <input
             type="text"
             name="fullName"
             placeholder="Full Name"
             value={selectedAddress.fullName}
             onChange={handleInputChange}
-            className="w-full p-2 border rounded-md outline-none"
+            className="w-full border rounded-md p-2"
           />
           <input
             type="text"
@@ -208,7 +202,7 @@ const OrderSummary = () => {
             placeholder="Phone Number"
             value={selectedAddress.phoneNumber}
             onChange={handleInputChange}
-            className="w-full p-2 border rounded-md outline-none"
+            className="w-full border rounded-md p-2"
           />
           <input
             type="text"
@@ -216,7 +210,7 @@ const OrderSummary = () => {
             placeholder="Area"
             value={selectedAddress.area}
             onChange={handleInputChange}
-            className="w-full p-2 border rounded-md outline-none"
+            className="w-full border rounded-md p-2"
           />
           <input
             type="text"
@@ -224,57 +218,57 @@ const OrderSummary = () => {
             placeholder="City"
             value={selectedAddress.city}
             onChange={handleInputChange}
-            className="w-full p-2 border rounded-md outline-none"
+            className="w-full border rounded-md p-2"
           />
         </div>
+      </div>
 
-        <div className="mb-4">
-          <h3 className="font-semibold text-gray-700 mb-2">Items in Cart</h3>
-          <ul className="max-h-40 overflow-auto border rounded-md">
-            {cartItemsList.length === 0 ? (
-              <li className="text-gray-500 p-2">Your cart is empty</li>
-            ) : (
-              cartItemsList.map(({ product, quantity }, index) => (
-                <li
-                  key={product._id || index}
-                  className="flex justify-between text-gray-700 py-2 px-3 border-b border-gray-200 last:border-b-0"
-                >
-                  <span>{product.name}</span>
-                  <span className="font-medium">x{quantity}</span>
-                </li>
-              ))
-            )}
-          </ul>
+      {/* Cart items */}
+      <div className="mb-6">
+        <h3 className="font-semibold mb-2">Items in Cart</h3>
+        <ul className="max-h-40 overflow-auto border rounded-md bg-white">
+          {cartItemsList.length === 0 ? (
+            <li className="p-2 text-gray-500">Your cart is empty</li>
+          ) : (
+            cartItemsList.map(({ product, quantity }) => (
+              <li
+                key={product._id}
+                className="flex justify-between px-4 py-2 border-b last:border-b-0"
+              >
+                <span>{product.name}</span>
+                <span className="font-medium">x{quantity}</span>
+              </li>
+            ))
+          )}
+        </ul>
+      </div>
+
+      {/* Price summary */}
+      <div className="border-t pt-3 space-y-3">
+        <div className="flex justify-between font-medium">
+          <p>Items ({getCartCount()})</p>
+          <p>
+            {currency}
+            {getCartAmount()}
+          </p>
         </div>
-
-        <hr className="border-gray-500/30 my-5" />
-
-        <div className="space-y-4">
-          <div className="flex justify-between text-base font-medium">
-            <p className="uppercase text-gray-600">Items ({getCartCount()})</p>
-            <p className="text-gray-800">
-              {currency}
-              {getCartAmount()}
-            </p>
-          </div>
-          <div className="flex justify-between">
-            <p className="text-gray-600">Shipping Fee</p>
-            <p className="font-medium text-gray-800">Free</p>
-          </div>
-          <div className="flex justify-between text-lg md:text-xl font-medium border-t pt-3">
-            <p>Total</p>
-            <p>
-              {currency}
-              {getCartAmount()}
-            </p>
-          </div>
+        <div className="flex justify-between">
+          <p>Shipping Fee</p>
+          <p>Free</p>
+        </div>
+        <div className="flex justify-between font-semibold text-lg border-t pt-3">
+          <p>Total</p>
+          <p>
+            {currency}
+            {getCartAmount()}
+          </p>
         </div>
       </div>
 
       <button
         onClick={createOrder}
-        className="w-full bg-orange-600 text-white py-3 mt-5 hover:bg-orange-700 rounded-md"
         disabled={cartItemsList.length === 0}
+        className="w-full mt-5 bg-orange-600 text-white py-3 rounded-md hover:bg-orange-700 disabled:opacity-50"
       >
         Place Order
       </button>
