@@ -4,20 +4,23 @@ import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { useClerk, UserButton } from "@clerk/nextjs";
+import { useClerk, useUser, UserButton } from "@clerk/nextjs";
 import { assets, BagIcon, CartIcon } from "@/assets/assets";
 import { useAppContext } from "@/context/AppContext";
 
 const Navbar = () => {
   const pathname = usePathname();
   const router = useRouter();
-  const { isSeller, user, getCartCount } = useAppContext();
   const { openSignIn } = useClerk();
-  const [searchQuery, setSearchQuery] = useState("");
+  const { user: clerkUser } = useUser(); // Clerk user
+  const { getCartCount } = useAppContext();
   const count = getCartCount();
 
-  // User is client if logged in and NOT a seller
+  const user = clerkUser;
+  const isSeller = clerkUser?.publicMetadata?.role === "admin"; // Or "seller"
   const isClient = user && !isSeller;
+
+  const [searchQuery, setSearchQuery] = useState("");
 
   const handleSearch = () => {
     const trimmed = searchQuery.trim();
@@ -62,7 +65,9 @@ const Navbar = () => {
           <Link
             href="/admin"
             className={`text-xs border px-4 py-1.5 rounded-full transition hover:bg-gray-100 ${
-              pathname === "/admin" ? "bg-gray-100 text-blue-600 font-semibold" : ""
+              pathname === "/admin"
+                ? "bg-gray-100 text-blue-600 font-semibold"
+                : ""
             }`}
           >
             Seller Dashboard
@@ -99,12 +104,10 @@ const Navbar = () => {
           )}
         </Link>
 
-        {/* Show Orders menu only for clients */}
         {user ? (
           <UserButton>
             <UserButton.MenuItems>
-              {/* Only show Orders if user is client (not seller) */}
-              {user && !isSeller && (
+              {isClient && (
                 <UserButton.Action
                   label="Orders"
                   labelIcon={<BagIcon />}
@@ -114,7 +117,6 @@ const Navbar = () => {
             </UserButton.MenuItems>
           </UserButton>
         ) : (
-          // Show sign-in button if not logged in
           <button
             onClick={openSignIn}
             className="flex items-center gap-2 hover:text-gray-900 transition"
@@ -123,7 +125,6 @@ const Navbar = () => {
             Account
           </button>
         )}
-
       </div>
 
       {/* Mobile Navigation */}

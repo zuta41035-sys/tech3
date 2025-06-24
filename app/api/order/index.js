@@ -3,7 +3,6 @@ import { getAuth } from "@clerk/nextjs/server";
 import connectDB from "@/config/db";
 import Order from "@/models/Order";
 
-
 export default async function handler(req, res) {
   await connectDB();
 
@@ -11,21 +10,20 @@ export default async function handler(req, res) {
   if (!userId) return res.status(401).json({ message: "Unauthorized" });
 
   if (req.method === "GET") {
-    // Get orders only for this user
     const orders = await Order.find({ userId });
     return res.status(200).json(orders);
   }
 
   if (req.method === "POST") {
-    const { items, totalPrice } = req.body;
+    const { items, totalPrice, shippingAddress } = req.body;
     if (!items || !totalPrice)
       return res.status(400).json({ message: "Missing order data" });
 
-    // Save order with userId
     const newOrder = new Order({
       userId,
       items,
-      totalPrice,
+      totalPrice, // This matches your model
+      shippingAddress,
     });
 
     await newOrder.save();
