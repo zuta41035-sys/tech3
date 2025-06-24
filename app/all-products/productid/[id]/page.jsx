@@ -74,7 +74,7 @@ const Productid = () => {
         <p className="font-semibold">Sign In Required</p>
         <p className="text-sm mt-1">
           Please sign in or sign up by clicking the{" "}
-          <span className="underline font-semibold">Account</span> icon at the top right.
+          <span className="font-semibold">Account</span> icon at the top right.
         </p>
         <small className="block mt-2 opacity-80 cursor-pointer">Click to dismiss</small>
       </div>
