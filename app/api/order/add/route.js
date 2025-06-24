@@ -7,71 +7,41 @@ export async function POST(request) {
   await connectDB();
 
   try {
+    const { userId } = getAuth({ headers: request.headers });
+    if (!userId) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await request.json();
+    console.log("Received order data:", body); // Debug log
 
-    const {
-      userId,
-      items,
-      amount,
-      address,
-      date,
-      paymentMethod,
-      paymentStatus,
-    } = body;
+    const { products, amount, address, paymentMethod } = body; // Changed from 'items' to 'products'
 
-    if (!userId || !items || !amount || !address) {
+    if (!products || !amount || !address || !paymentMethod) {
+      console.log("Missing data:", { products: !!products, amount: !!amount, address: !!address, paymentMethod: !!paymentMethod });
       return NextResponse.json(
-        { success: false, message: "Missing required order data" },
+        { message: "Missing required order data" },
         { status: 400 }
       );
     }
 
     const newOrder = new Order({
       userId,
-      products: items,
-      amount: amount,
+      products: products,     // Changed from 'items' to 'products'
+      amount: amount,         // Changed from 'totalAmount' to 'amount'
       address,
-      createdAt: date || new Date(),
       paymentMethod,
-      status: paymentStatus || "Pending",
+      // Removed paymentStatus - not in schema
+      // Removed createdAt - schema has default
     });
 
     const savedOrder = await newOrder.save();
 
     return NextResponse.json({ success: true, order: savedOrder }, { status: 201 });
-  } catch (err) {
-    console.error("Error creating order:", err);
+  } catch (error) {
+    console.error("Error creating order:", error);
     return NextResponse.json(
-      { success: false, message: "Internal server error" },
-      { status: 500 }
-    );
-  }
-}
-
-export async function GET(request) {
-  await connectDB();
-
-  try {
-    // Extract userId from Clerk auth token in request headers
-    const { userId } = getAuth({ headers: request.headers });
-    console.log("User ID from auth:", userId);
-
-    if (!userId) {
-      console.log("Unauthorized: no userId");
-      return NextResponse.json(
-        { success: false, message: "Unauthorized" },
-        { status: 401 }
-      );
-    }
-
-    // Find orders for this user, newest first
-    const orders = await Order.find({ userId }).sort({ createdAt: -1 });
-
-    return NextResponse.json({ success: true, orders }, { status: 200 });
-  } catch (err) {
-    console.error("Error fetching orders:", err);
-    return NextResponse.json(
-      { success: false, message: "Failed to fetch orders" },
+      { message: "Internal server error", error: error.message },
       { status: 500 }
     );
   }

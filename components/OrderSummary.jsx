@@ -3,6 +3,7 @@ import { useAppContext } from "@/context/AppContext";
 import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@clerk/nextjs"; // <-- import useAuth
 
 const OrderSummary = () => {
   const {
@@ -17,6 +18,8 @@ const OrderSummary = () => {
   } = useAppContext();
 
   const router = useRouter();
+
+  const { getToken } = useAuth(); // <-- get getToken from Clerk
 
   const [selectedAddress, setSelectedAddress] = useState({
     fullName: "",
@@ -106,26 +109,36 @@ const OrderSummary = () => {
   const amount = getCartAmount();
 
   const order = {
-    userId: user.id, // <-- this line is important
-    items: cartItemsList.map(({ product, quantity }) => ({
+    userId: user.id,
+    products: cartItemsList.map(({ product, quantity }) => ({  // Changed from 'items' to 'products'
       productId: product._id,
       name: product.name,
       quantity,
       price: product.price,
     })),
-    amount: amount, // <--- must match backend key
+    amount: amount,
     address: {
       ...selectedAddress,
       state: "N/A",
     },
     paymentMethod: "COD",
-    paymentStatus: "Pending",
   };
 
+  // DEBUG LINES
+  console.log("Order data being sent:", JSON.stringify(order, null, 2));
+  console.log("Amount value:", amount);
+  console.log("User ID:", user.id);
+  console.log("Products count:", order.products.length);
+
   try {
+    const token = await getToken();
+
     const res = await fetch("/api/order/add", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
       body: JSON.stringify(order),
     });
 
@@ -138,10 +151,10 @@ const OrderSummary = () => {
     toast.success("Order placed successfully!");
     router.push("/order-placed");
   } catch (error) {
+    console.error("Full error:", error);
     toast.error(error.message);
   }
 };
-
 
   return (
     <div className="w-full md:w-96 bg-gray-50 p-5 rounded-lg shadow-md">

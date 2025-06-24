@@ -3,6 +3,7 @@ import { getAuth } from "@clerk/nextjs/server";
 import connectDB from "@/config/db";
 import Order from "@/models/Order";
 
+
 export default async function handler(req, res) {
   await connectDB();
 
