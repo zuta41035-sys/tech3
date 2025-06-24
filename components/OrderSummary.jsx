@@ -3,7 +3,7 @@ import { useAppContext } from "@/context/AppContext";
 import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@clerk/nextjs"; // <-- import useAuth
+import { useAuth } from "@clerk/nextjs";
 
 const OrderSummary = () => {
   const {
@@ -14,12 +14,11 @@ const OrderSummary = () => {
     products,
     cartItems,
     setCartItems,
-    user, // user object with user.id expected here
+    user,
   } = useAppContext();
 
   const router = useRouter();
-
-  const { getToken } = useAuth(); // <-- get getToken from Clerk
+  const { getToken } = useAuth();
 
   const [selectedAddress, setSelectedAddress] = useState({
     fullName: "",
@@ -70,7 +69,7 @@ const OrderSummary = () => {
   }, [cartItems, products, setCartItems]);
 
   useEffect(() => {
-    // Load saved address from localStorage (or replace with your API call)
+    // Load saved address from localStorage
     const storedAddress = localStorage.getItem("userAddress");
     if (storedAddress) {
       setUserAddresses([JSON.parse(storedAddress)]);
@@ -91,70 +90,69 @@ const OrderSummary = () => {
   };
 
   const createOrder = async () => {
-  if (
-    !selectedAddress.fullName.trim() ||
-    !selectedAddress.phoneNumber.trim() ||
-    !selectedAddress.area.trim() ||
-    !selectedAddress.city.trim()
-  ) {
-    toast.error("Please complete all shipping address fields.");
-    return;
-  }
-
-  if (cartItemsList.length === 0) {
-    toast.error("Your cart is empty!");
-    return;
-  }
-
-  const amount = getCartAmount();
-
-  const order = {
-    userId: user.id,
-    products: cartItemsList.map(({ product, quantity }) => ({  // Changed from 'items' to 'products'
-      productId: product._id,
-      name: product.name,
-      quantity,
-      price: product.price,
-    })),
-    amount: amount,
-    address: {
-      ...selectedAddress,
-      state: "N/A",
-    },
-    paymentMethod: "COD",
-  };
-
-  // DEBUG LINES
-  console.log("Order data being sent:", JSON.stringify(order, null, 2));
-  console.log("Amount value:", amount);
-  console.log("User ID:", user.id);
-  console.log("Products count:", order.products.length);
-
-  try {
-    const token = await getToken();
-
-    const res = await fetch("/api/order/add", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(order),
-    });
-
-    if (!res.ok) {
-      const errorData = await res.json();
-      throw new Error(errorData.message || "Failed to place order");
+    if (
+      !selectedAddress.fullName.trim() ||
+      !selectedAddress.phoneNumber.trim() ||
+      !selectedAddress.area.trim() ||
+      !selectedAddress.city.trim()
+    ) {
+      toast.error("Please complete all shipping address fields.");
+      return;
     }
 
-    await resetCart();
-    toast.success("Order placed successfully!");
-    router.push("/order-placed");
-  } catch (error) {
-    console.error("Full error:", error);
-    toast.error(error.message);
-  }
-};
+    if (cartItemsList.length === 0) {
+      toast.error("Your cart is empty!");
+      return;
+    }
+
+    const totalAmount = getCartAmount();
+
+    const orderData = {
+      products: cartItemsList.map(({ product, quantity }) => ({
+        productId: product._id,
+        name: product.name,
+        quantity,
+        price: product.offerPrice,
+        totalPrice: product.offerPrice * quantity
+      })),
+      totalAmount: totalAmount,
+      address: {
+        fullName: selectedAddress.fullName,
+        phoneNumber: selectedAddress.phoneNumber,
+        area: selectedAddress.area,
+        city: selectedAddress.city,
+        state: "N/A",
+        country: "Cambodia"
+      },
+      paymentMethod: "COD",
+    };
+
+    try {
+      const token = await getToken();
+
+      const res = await fetch("/api/orders", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(orderData),
+      });
+
+      const data = await res.json();
+
+      if (!data.success) {
+        throw new Error(data.message || "Failed to place order");
+      }
+
+      await resetCart();
+      toast.success("Order placed successfully!");
+      router.push("/order-placed");
+    } catch (error) {
+      console.error("Order creation error:", error);
+      toast.error(error.message || "Failed to place order");
+    }
+  };
 
   return (
     <div className="w-full md:w-96 bg-gray-50 p-5 rounded-lg shadow-md">
