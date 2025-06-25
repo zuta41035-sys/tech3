@@ -107,20 +107,25 @@ const OrderSummary = () => {
       return;
     }
 
-    const amount = getCartAmount();
+    const totalAmount = getCartAmount();
 
-    const order = {
+    const orderData = {
       userId: user.id,
       products: cartItemsList.map(({ product, quantity }) => ({
         productId: product._id,
         name: product.name,
         quantity,
-        price: product.price,
+        price: product.offerPrice,
+        totalPrice: product.offerPrice * quantity
       })),
-      amount: amount,
+      totalAmount: totalAmount,
       address: {
-        ...selectedAddress,
+        fullName: selectedAddress.fullName,
+        phoneNumber: selectedAddress.phoneNumber,
+        area: selectedAddress.area,
+        city: selectedAddress.city,
         state: "N/A",
+        country: "Cambodia"
       },
       paymentMethod: "COD",
     };
@@ -132,27 +137,27 @@ const OrderSummary = () => {
         return;
       }
 
-      const res = await fetch("/api/order/add", {
+      const res = await fetch("/api/orders", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,  // your auth token from Clerk
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(order),
+        body: JSON.stringify(orderData),
       });
 
+      const data = await res.json();
 
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || "Failed to place order");
+      if (!data.success) {
+        throw new Error(data.message || "Failed to place order");
       }
 
       await resetCart();
       toast.success("Order placed successfully!");
       router.push("/order-placed");
     } catch (error) {
-      console.error("Full error:", error);
-      toast.error(error.message);
+      console.error("Order creation error:", error);
+      toast.error(error.message || "Failed to place order");
     }
   };
 
