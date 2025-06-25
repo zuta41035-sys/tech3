@@ -1,36 +1,52 @@
-// /app/api/order/route.js
-
+import { currentUser } from "@clerk/nextjs/server";
+import connectDB from "@/lib/db"; 
+import Order from "@/models/Order"; 
 import { NextResponse } from "next/server";
-import connectDB from "@/lib/db";
-import Order from "@/models/Order";
-import { getAuth } from "@clerk/nextjs/server";
 
-export async function GET(request) {
-  await connectDB();
-
+export async function POST(req) {
   try {
-    console.log("Headers received:", JSON.stringify(request.headers));
-
-    const { userId } = getAuth({ headers: request.headers });
-
-    if (!userId) {
-      console.error("Unauthorized: no userId in token");
-      return NextResponse.json(
-        { success: false, message: "Unauthorized" },
-        { status: 401 }
-      );
+    const user = await currentUser();
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    console.log("User ID from auth:", userId);
+    const { products, amount, address } = await req.json();
 
-    const orders = await Order.find({ userId }).sort({ createdAt: -1 });
+    await connectDB();
+
+    const order = new Order({
+      userId: user.id,
+      products,
+      amount,
+      address,
+      status: "Processing",
+      createdAt: new Date(),
+    });
+
+    const savedOrder = await order.save();
+
+    return NextResponse.json({ message: "Order created", orderId: savedOrder._id });
+  } catch (error) {
+    console.error("Order API Error:", error);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+  }
+}
+
+export async function GET(req) {
+  try {
+    const user = await currentUser();
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    await connectDB();
+
+    // Fetch orders for the current user
+    const orders = await Order.find({ userId: user.id }).sort({ createdAt: -1 });
 
     return NextResponse.json({ success: true, orders });
   } catch (error) {
-    console.error("Error fetching orders:", error);
-    return NextResponse.json(
-      { success: false, message: "Failed to fetch orders" },
-      { status: 500 }
-    );
+    console.error("Fetch orders error:", error);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

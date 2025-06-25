@@ -1,42 +1,31 @@
-// models/Order.js
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
-const OrderSchema = new mongoose.Schema({
-  userId: {
-    type: String,
-    required: true,
+const orderSchema = new mongoose.Schema({
+  userId: { type: String, required: true },
+  products: [
+    {
+      productId: { type: String, required: true },
+      name: { type: String, required: true },
+      quantity: { type: Number, required: true },
+      price: { type: Number, required: true },
+    },
+  ],
+  amount: { type: Number, required: true },
+  address: {
+    fullName: { type: String, required: true },
+    phoneNumber: { type: String, required: true },
+    area: { type: String, required: true },
+    city: { type: String, required: true },
+    state: { type: String, default: "N/A" },
   },
-  items: [{
-    name: String,
-    price: Number,
-    quantity: Number,
-    productId: String,
-    image: String
-  }],
-  totalPrice: {
-    type: Number,
-    required: true,
-  },
+  paymentMethod: { type: String, required: true },
   status: {
     type: String,
-    enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled'],
-    default: 'pending'
+    enum: ["pending", "paid", "shipped", "completed", "cancelled"],
+    default: "pending",
   },
-  shippingAddress: {
-    street: String,
-    city: String,
-    state: String,
-    zipCode: String,
-    country: String
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-  updatedAt: {
-    type: Date,
-    default: Date.now,
-  }
+  createdAt: { type: Date, default: Date.now },
 });
 
-export default mongoose.models.Order || mongoose.model('Order', OrderSchema);
+const Order = mongoose.models.Order || mongoose.model("Order", orderSchema);
+export default Order;

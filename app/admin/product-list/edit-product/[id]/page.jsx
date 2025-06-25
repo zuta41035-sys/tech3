@@ -18,26 +18,33 @@ const EditProductPage = () => {
     offerPrice: "",
   });
 
-  useEffect(() => {
-    const fetchProduct = async () => {
-      try {
-        setLoading(true);
-        const res = await fetch(`/api/product/${id}`);
-        if (!res.ok) throw new Error("Failed to fetch product");
-        const data = await res.json();
+  // Updated fetchProduct with better error handling & JSON response check
+  const fetchProduct = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch(`/api/product/${id}`);
+      const data = await res.json(); // ✅ Call only once
 
-        setForm({
-          name: data.name || "",
-          description: data.description || "",
-          price: data.price || "",
-          offerPrice: data.offerPrice || "",
-        });
-      } catch (err) {
-        toast.error(err.message);
-      } finally {
-        setLoading(false);
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || "Failed to fetch product");
       }
-    };
+
+      const product = data.product || {};
+
+      setForm({
+        name: product.name || "",
+        description: product.description || "",
+        price: product.price || "",
+        offerPrice: product.offerPrice || "",
+      });
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchProduct();
   }, [id]);
 

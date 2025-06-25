@@ -1,39 +1,43 @@
 import { NextResponse } from "next/server";
-import mongoose from "mongoose";
 import connectDB from "@/lib/db";
 import Product from "@/models/Product";
+import { Types } from "mongoose";
 
-export async function DELETE(request, { params }) {
+export async function GET(request, { params }) {
   const { id } = params;
 
-  if (!mongoose.Types.ObjectId.isValid(id)) {
+  if (!Types.ObjectId.isValid(id)) {
     return NextResponse.json(
       { success: false, message: "Invalid product ID" },
       { status: 400 }
     );
   }
 
-  await connectDB();
+  try {
+    await connectDB();
 
-  const deleted = await Product.findByIdAndDelete(id);
+    const product = await Product.findById(id).lean();
 
-  if (!deleted) {
+    if (!product) {
+      return NextResponse.json(
+        { success: false, message: "Product not found" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({ success: true, product }, { status: 200 });
+  } catch (error) {
     return NextResponse.json(
-      { success: false, message: "Product not found" },
-      { status: 404 }
+      { success: false, message: error.message || "Internal server error" },
+      { status: 500 }
     );
   }
-
-  return NextResponse.json(
-    { success: true, message: "Product deleted successfully" },
-    { status: 200 }
-  );
 }
 
 export async function PUT(request, { params }) {
   const { id } = params;
 
-  if (!mongoose.Types.ObjectId.isValid(id)) {
+  if (!Types.ObjectId.isValid(id)) {
     return NextResponse.json(
       { success: false, message: "Invalid product ID" },
       { status: 400 }
@@ -46,7 +50,6 @@ export async function PUT(request, { params }) {
     const body = await request.json();
     const { name, description, price, offerPrice } = body;
 
-    // Find existing product
     const existingProduct = await Product.findById(id);
     if (!existingProduct) {
       return NextResponse.json(
@@ -55,24 +58,50 @@ export async function PUT(request, { params }) {
       );
     }
 
-    // Update only allowed fields, keep image and category same
-    const updateData = {
-      name,
-      description,
-      price,
-      offerPrice,
-      category: existingProduct.category,
-      image: existingProduct.image,
-    };
+    existingProduct.name = name;
+    existingProduct.description = description;
+    existingProduct.price = price;
+    existingProduct.offerPrice = offerPrice;
 
-    const updated = await Product.findByIdAndUpdate(
-      id,
-      updateData,
-      { new: true, runValidators: true }
-    );
+    const updatedProduct = await existingProduct.save();
 
     return NextResponse.json(
-      { success: true, message: "Product updated successfully", product: updated },
+      { success: true, message: "Product updated", product: updatedProduct },
+      { status: 200 }
+    );
+  } catch (error) {
+    return NextResponse.json(
+      { success: false, message: error.message || "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request, { params }) {
+  const { id } = params;
+
+  if (!Types.ObjectId.isValid(id)) {
+    return NextResponse.json(
+      { success: false, message: "Invalid product ID" },
+      { status: 400 }
+    );
+  }
+
+  try {
+    await connectDB();
+
+    const product = await Product.findById(id);
+    if (!product) {
+      return NextResponse.json(
+        { success: false, message: "Product not found" },
+        { status: 404 }
+      );
+    }
+
+    await Product.findByIdAndDelete(id);
+
+    return NextResponse.json(
+      { success: true, message: "Product deleted successfully" },
       { status: 200 }
     );
   } catch (error) {

@@ -1,48 +1,55 @@
-import { NextResponse } from "next/server";
+import { currentUser } from "@clerk/nextjs/server";
 import connectDB from "@/lib/db";
 import Order from "@/models/Order";
-import { getAuth } from "@clerk/nextjs/server";
+import { NextResponse } from "next/server";
 
-export async function POST(request) {
-  await connectDB();
-
+export async function POST(req) {
   try {
-    const { userId } = getAuth({ headers: request.headers });
-    if (!userId) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    await connectDB();
+
+    const user = await currentUser();
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const body = await request.json();
-    console.log("Received order data:", body); // Debug log
+    const { products, amount, address } = await req.json();
 
-    const { products, amount, address, paymentMethod } = body; // Changed from 'items' to 'products'
-
-    if (!products || !amount || !address || !paymentMethod) {
-      console.log("Missing data:", { products: !!products, amount: !!amount, address: !!address, paymentMethod: !!paymentMethod });
-      return NextResponse.json(
-        { message: "Missing required order data" },
-        { status: 400 }
-      );
+    if (!products || !Array.isArray(products) || products.length === 0) {
+      return NextResponse.json({ error: "Products are required" }, { status: 400 });
+    }
+    if (!amount || typeof amount !== "number") {
+      return NextResponse.json({ error: "Valid amount is required" }, { status: 400 });
+    }
+    if (
+      !address ||
+      typeof address !== "object" ||
+      Array.isArray(address) ||
+      !address.fullName ||
+      !address.phoneNumber ||
+      !address.area ||
+      !address.city
+    ) {
+      return NextResponse.json({ error: "Valid address object is required" }, { status: 400 });
     }
 
-    const newOrder = new Order({
-      userId,
-      products: products,     // Changed from 'items' to 'products'
-      amount: amount,         // Changed from 'totalAmount' to 'amount'
+    console.log("Creating order for user:", user.id);
+    console.log("Order data:", { products, amount, address });
+
+    const order = new Order({
+      userId: user.id,
+      products,
+      amount,
       address,
-      paymentMethod,
-      // Removed paymentStatus - not in schema
-      // Removed createdAt - schema has default
+      paymentMethod: "COD",  
+      status: "pending", 
+      createdAt: new Date(),
     });
 
-    const savedOrder = await newOrder.save();
+    await order.save();
 
-    return NextResponse.json({ success: true, order: savedOrder }, { status: 201 });
+    return NextResponse.json({ message: "Order created", orderId: order._id });
   } catch (error) {
-    console.error("Error creating order:", error);
-    return NextResponse.json(
-      { message: "Internal server error", error: error.message },
-      { status: 500 }
-    );
+    console.error("Order API Error:", error);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

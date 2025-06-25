@@ -17,7 +17,7 @@ const Navbar = () => {
   const count = getCartCount();
 
   const user = clerkUser;
-  const isSeller = clerkUser?.publicMetadata?.role === "admin"; // Or "seller"
+  const isSeller = clerkUser?.publicMetadata?.role === "seller"; 
   const isClient = user && !isSeller;
 
   const [searchQuery, setSearchQuery] = useState("");

@@ -21,28 +21,30 @@ const MyOrders = () => {
 
   const fetchOrders = async () => {
     try {
+      setLoading(true);
       const res = await fetch("/api/order", {
-        credentials: "include",
+        credentials: "include", // Make sure backend supports auth with cookies
       });
       if (!res.ok) {
-        const text = await res.text();
-        throw new Error(`Failed to fetch orders: ${text}`);
+        const errText = await res.text();
+        throw new Error(`Failed to fetch orders: ${errText}`);
       }
 
       const contentType = res.headers.get("content-type");
       if (!contentType || !contentType.includes("application/json")) {
-        const text = await res.text();
-        throw new Error(`Expected JSON but got: ${text}`);
+        const errText = await res.text();
+        throw new Error(`Expected JSON but got: ${errText}`);
       }
 
       const data = await res.json();
+
       if (!data.success) throw new Error(data.message || "Failed to fetch orders");
 
       setOrders(data.orders || []);
     } catch (error) {
       toast.error(error.message || "Failed to fetch orders");
       setOrders([]);
-      console.error(error);
+      console.error("Fetch orders error:", error);
     } finally {
       setLoading(false);
     }
@@ -67,10 +69,12 @@ const MyOrders = () => {
         throw new Error(errorData.message || "Failed to delete order");
       }
 
+      // Remove deleted order from state
       setOrders((prev) => prev.filter((order) => order._id !== orderId));
-      toast.success("Order deleted");
+      toast.success("Order deleted successfully");
     } catch (error) {
       toast.error("Error deleting order: " + error.message);
+      console.error("Delete order error:", error);
     } finally {
       setDeletingId(null);
     }
@@ -104,7 +108,9 @@ const MyOrders = () => {
                   <p className="flex flex-col gap-3">
                     <span className="font-medium text-base">
                       {order.products && order.products.length > 0
-                        ? order.products.map((item) => `${item.name} x ${item.quantity}`).join(", ")
+                        ? order.products
+                            .map((item) => `${item.name} x ${item.quantity}`)
+                            .join(", ")
                         : "No products"}
                     </span>
                     <span>Items: {order.products?.length || 0}</span>
@@ -125,7 +131,7 @@ const MyOrders = () => {
 
                 <p className="order-total font-medium my-auto">
                   {currency}
-                  {(order.totalAmount || 0).toFixed(2)}
+                  {(order.amount || order.totalAmount || 0).toFixed(2)}
                 </p>
 
                 <div className="order-payment">

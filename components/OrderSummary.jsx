@@ -3,7 +3,7 @@ import { useAppContext } from "@/context/AppContext";
 import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@clerk/nextjs"; // <-- import useAuth
+import { useAuth } from "@clerk/nextjs";
 
 const OrderSummary = () => {
   const {
@@ -14,12 +14,11 @@ const OrderSummary = () => {
     products,
     cartItems,
     setCartItems,
-    user, // user object with user.id expected here
+    user,
   } = useAppContext();
 
   const router = useRouter();
-
-  const { getToken } = useAuth(); // <-- get getToken from Clerk
+  const { getToken } = useAuth();
 
   const [selectedAddress, setSelectedAddress] = useState({
     fullName: "",
@@ -30,7 +29,6 @@ const OrderSummary = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [userAddresses, setUserAddresses] = useState([]);
 
-  // Build cart items list from cartItems and products
   const cartItemsList = React.useMemo(() => {
     if (!cartItems || typeof cartItems !== "object") return [];
 
@@ -48,7 +46,6 @@ const OrderSummary = () => {
   }, [cartItems, products]);
 
   useEffect(() => {
-    // Clean cart if product missing from products list
     if (cartItems && products.length > 0 && setCartItems) {
       const cleanedCartItems = { ...cartItems };
       let hasChanges = false;
@@ -70,7 +67,6 @@ const OrderSummary = () => {
   }, [cartItems, products, setCartItems]);
 
   useEffect(() => {
-    // Load saved address from localStorage (or replace with your API call)
     const storedAddress = localStorage.getItem("userAddress");
     if (storedAddress) {
       setUserAddresses([JSON.parse(storedAddress)]);
@@ -91,77 +87,80 @@ const OrderSummary = () => {
   };
 
   const createOrder = async () => {
-  if (
-    !selectedAddress.fullName.trim() ||
-    !selectedAddress.phoneNumber.trim() ||
-    !selectedAddress.area.trim() ||
-    !selectedAddress.city.trim()
-  ) {
-    toast.error("Please complete all shipping address fields.");
-    return;
-  }
-
-  if (cartItemsList.length === 0) {
-    toast.error("Your cart is empty!");
-    return;
-  }
-
-  const amount = getCartAmount();
-
-  const order = {
-    userId: user.id,
-    products: cartItemsList.map(({ product, quantity }) => ({  // Changed from 'items' to 'products'
-      productId: product._id,
-      name: product.name,
-      quantity,
-      price: product.price,
-    })),
-    amount: amount,
-    address: {
-      ...selectedAddress,
-      state: "N/A",
-    },
-    paymentMethod: "COD",
-  };
-
-  // DEBUG LINES
-  console.log("Order data being sent:", JSON.stringify(order, null, 2));
-  console.log("Amount value:", amount);
-  console.log("User ID:", user.id);
-  console.log("Products count:", order.products.length);
-
-  try {
-    const token = await getToken();
-
-    const res = await fetch("/api/order/add", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(order),
-    });
-
-    if (!res.ok) {
-      const errorData = await res.json();
-      throw new Error(errorData.message || "Failed to place order");
+    if (!user || !user.id) {
+      toast.error("User not logged in.");
+      return;
     }
 
-    await resetCart();
-    toast.success("Order placed successfully!");
-    router.push("/order-placed");
-  } catch (error) {
-    console.error("Full error:", error);
-    toast.error(error.message);
-  }
-};
+    if (
+      !selectedAddress.fullName.trim() ||
+      !selectedAddress.phoneNumber.trim() ||
+      !selectedAddress.area.trim() ||
+      !selectedAddress.city.trim()
+    ) {
+      toast.error("Please complete all shipping address fields.");
+      return;
+    }
+
+    if (cartItemsList.length === 0) {
+      toast.error("Your cart is empty!");
+      return;
+    }
+
+    const amount = getCartAmount();
+
+    const order = {
+      userId: user.id,
+      products: cartItemsList.map(({ product, quantity }) => ({
+        productId: product._id,
+        name: product.name,
+        quantity,
+        price: product.price,
+      })),
+      amount: amount,
+      address: {
+        ...selectedAddress,
+        state: "N/A",
+      },
+      paymentMethod: "COD",
+    };
+
+    try {
+      const token = await getToken();
+      if (!token) {
+        toast.error("Authentication failed.");
+        return;
+      }
+
+      const res = await fetch("/api/order/add", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,  // your auth token from Clerk
+        },
+        body: JSON.stringify(order),
+      });
+
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Failed to place order");
+      }
+
+      await resetCart();
+      toast.success("Order placed successfully!");
+      router.push("/order-placed");
+    } catch (error) {
+      console.error("Full error:", error);
+      toast.error(error.message);
+    }
+  };
 
   return (
     <div className="w-full md:w-96 bg-gray-50 p-5 rounded-lg shadow-md">
       <h2 className="text-xl md:text-2xl font-medium text-gray-700">Order Summary</h2>
       <hr className="border-gray-300 my-5" />
 
-      {/* Address selection */}
       <div className="mb-6">
         <label className="block font-semibold mb-2">Select Address</label>
         <div className="relative">
@@ -199,7 +198,6 @@ const OrderSummary = () => {
           )}
         </div>
 
-        {/* Manual input */}
         <div className="mt-4 space-y-2">
           <input
             type="text"
