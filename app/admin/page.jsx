@@ -17,7 +17,7 @@ const AddProduct = () => {
   const [offerPrice, setOfferPrice] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Clean up created object URLs on unmount or file change
+
   useEffect(() => {
     return () => {
       if (file && file.previewUrl) {
@@ -29,13 +29,11 @@ const AddProduct = () => {
   const handleFileChange = (selectedFile) => {
     if (!selectedFile) return;
 
-    // Validate file type (basic)
     if (!selectedFile.type.startsWith("image/")) {
       toast.error("Only image files are allowed.");
       return;
     }
 
-    // Create a preview URL for display
     const previewUrl = URL.createObjectURL(selectedFile);
     setFile(Object.assign(selectedFile, { previewUrl }));
   };

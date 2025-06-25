@@ -197,7 +197,7 @@ const OrderSummary = () => {
                 className="p-2 text-center text-blue-600 cursor-pointer hover:bg-gray-100"
                 onClick={() => router.push("/add-address")}
               >
-                + Add New Address
+                + Add New Addresses
               </li>
             </ul>
           )}

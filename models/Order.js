@@ -77,7 +77,7 @@ OrderSchema.pre('save', function (next) {
   next();
 });
 
-// Pre-update hook
+// Pre-updates hook
 OrderSchema.pre('findOneAndUpdate', function (next) {
   this.set({ updatedAt: Date.now() });
   next();
