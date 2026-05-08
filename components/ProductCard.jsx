@@ -33,7 +33,7 @@ const ProductCard = ({ product }) => {
           unoptimized
         />
         <button
-          className="absolute top-2 right-2 bg-white p-2 rounded-full shadow-md"
+          className="group absolute top-2 right-2 bg-white p-2 rounded-full shadow-md transition hover:bg-red-500"
           onClick={(e) => {
             e.stopPropagation();
             addToCart(product._id);
@@ -41,7 +41,7 @@ const ProductCard = ({ product }) => {
           aria-label="Add to cart"
         >
           <Image
-            className="h-3 w-3"
+            className="h-3 w-3 transition group-hover:brightness-0 group-hover:invert"
             src={assets.heart_icon}
             alt="heart_icon"
           />
@@ -76,7 +76,7 @@ const ProductCard = ({ product }) => {
           {currency}
           {product.offerPrice}
         </p>
-        <button className="max-sm:hidden px-4 py-1.5 text-gray-500 border border-gray-500/20 rounded-full text-xs hover:lg transition">
+        <button className="max-sm:hidden px-4 py-1.5 text-gray-500 border border-gray-500/20 rounded-full text-xs transition hover:bg-red-500 hover:text-white">
           Buy now
         </button>
       </div>

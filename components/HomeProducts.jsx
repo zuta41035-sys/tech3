@@ -29,9 +29,10 @@ const HomeProducts = () => {
 
   if (loading) return <p>Loading products...</p>;
 
+  {/* popular product */}
   return (
     <div className="flex flex-col items-center pt-14">
-      <p className="text-2xl font-medium text-left w-full">Popular products</p>
+      <p className="text-2xl font-medium text-left w-full">Popular Products</p> 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 mt-6 pb-14 w-full">
         {products.length > 0 ? (
           products.map((product) => <ProductCard key={product._id} product={product} />)

@@ -1,3 +1,5 @@
+/* shop */
+
 "use client";
 
 import React from "react";
@@ -11,7 +13,7 @@ const AllProducts = () => {
 
   return (
     <div className="px-6 md:px-16 lg:px-32 pt-14"> 
-      <p className="text-2xl font-medium text-left w-full">Popular products</p>
+      <p className="text-2xl font-medium text-left w-full">All Products</p>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 mt-6 pb-14 w-full">
         {products?.length > 0 ? (
           products.map((product) => (

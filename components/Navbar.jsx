@@ -12,15 +12,16 @@ const Navbar = () => {
   const pathname = usePathname();
   const router = useRouter();
   const { openSignIn } = useClerk();
-  const { user: clerkUser } = useUser(); // Clerk user
+  const { user: clerkUser } = useUser();
   const { getCartCount } = useAppContext();
-  const count = getCartCount();
 
+  const count = getCartCount();
   const user = clerkUser;
-  const isSeller = clerkUser?.publicMetadata?.role === "seller"; 
+  const isSeller = clerkUser?.publicMetadata?.role === "seller";
   const isClient = user && !isSeller;
 
   const [searchQuery, setSearchQuery] = useState("");
+  const [active, setActive] = useState("");
 
   const handleSearch = () => {
     const trimmed = searchQuery.trim();
@@ -30,13 +31,9 @@ const Navbar = () => {
     }
   };
 
-  const navLinkClass = (path) =>
-    `transition duration-200 hover:text-blue-600 hover:underline underline-offset-4 ${
-      pathname === path ? "text-blue-600 font-medium underline" : ""
-    }`;
-
   return (
     <nav className="flex items-center justify-between px-6 md:px-16 lg:px-32 py-3 border-b border-gray-300 text-gray-700 bg-white">
+
       {/* Logo */}
       <Link href="/">
         <Image
@@ -47,28 +44,50 @@ const Navbar = () => {
         />
       </Link>
 
-      {/* Desktop Navigation Links */}
+      {/* Desktop Navigation */}
       <div className="hidden md:flex items-center gap-6">
-        <Link href="/" className={navLinkClass("/")}>
+
+        {/* Home */}
+        <Link href="/" className="relative group">
           Home
+          <span
+            className={`absolute left-0 -bottom-1 h-[2px] bg-blue-600 transition-all duration-300 ease-out
+            ${pathname === "/" ? "w-full" : "w-0 group-hover:w-full"}`}
+          />
         </Link>
-        <Link href="/all-products" className={navLinkClass("/all-products")}>
+
+        {/* Shop */}
+        <Link href="/all-products" className="relative group">
           Shop
+          <span
+            className={`absolute left-0 -bottom-1 h-[2px] bg-blue-600 transition-all duration-300 ease-out
+            ${pathname === "/all-products" ? "w-full" : "w-0 group-hover:w-full"}`}
+          />
         </Link>
-        <Link href="/about-us" className={navLinkClass("/about-us")}>
+
+        {/* About */}
+        <Link href="/about-us" className="relative group">
           About Us
+          <span
+            className={`absolute left-0 -bottom-1 h-[2px] bg-blue-600 transition-all duration-300 ease-out
+            ${pathname === "/about-us" ? "w-full" : "w-0 group-hover:w-full"}`}
+          />
         </Link>
-        <Link href="/Contact-Us" className={navLinkClass("/Contact-Us")}>
+
+        {/* Contact */}
+        <Link href="/Contact-Us" className="relative group">
           Contact
+          <span
+            className={`absolute left-0 -bottom-1 h-[2px] bg-blue-600 transition-all duration-300 ease-out
+            ${pathname === "/Contact-Us" ? "w-full" : "w-0 group-hover:w-full"}`}
+          />
         </Link>
+
+        {/* Seller Dashboard */}
         {isSeller && (
           <Link
             href="/admin"
-            className={`text-xs border px-4 py-1.5 rounded-full transition hover:bg-gray-100 ${
-              pathname === "/admin"
-                ? "bg-gray-100 text-blue-600 font-semibold"
-                : ""
-            }`}
+            className={`relative group text-xs border px-4 py-1.5 rounded-full transition hover:bg-gray-100`}
           >
             Seller Dashboard
           </Link>
@@ -76,14 +95,14 @@ const Navbar = () => {
       </div>
 
       {/* Search Bar */}
-      <div className="hidden md:flex items-center border rounded px-2 bg-white">
+      <div className="hidden md:flex items-center border rounded px-2 bg-white transition hover:bg-gray-200 focus-within:bg-gray-200">
         <input
           type="text"
           placeholder="Search..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-          className="outline-none text-sm px-2 py-1"
+          className="outline-none text-sm px-2 py-1 bg-transparent"
         />
         <Image
           src={assets.search_icon}
@@ -93,10 +112,18 @@ const Navbar = () => {
         />
       </div>
 
-      {/* Cart & User Account */}
+      {/* Cart + Account */}
       <div className="hidden md:flex items-center gap-4">
-        <Link href="/cart" className="relative cursor-pointer">
-          <CartIcon className="w-6 h-6 text-gray-700 hover:text-gray-900 transition" />
+
+        {/* Cart */}
+        <Link
+          href="/cart"
+          className={`relative flex items-center transition duration-200 ${
+            pathname === "/cart" ? "text-blue-600" : "text-gray-700"
+          }`}
+        >
+          <CartIcon className="w-6 h-6" />
+
           {count > 0 && (
             <span className="absolute -top-1 -right-2 bg-red-600 text-white rounded-full px-1.5 text-xs font-bold">
               {count}
@@ -104,6 +131,7 @@ const Navbar = () => {
           )}
         </Link>
 
+        {/* Account */}
         {user ? (
           <UserButton>
             <UserButton.MenuItems>
@@ -118,16 +146,28 @@ const Navbar = () => {
           </UserButton>
         ) : (
           <button
-            onClick={openSignIn}
-            className="flex items-center gap-2 hover:text-gray-900 transition"
+            onClick={() => {
+              setActive("account");
+              openSignIn();
+            }}
+            className={`flex items-center gap-2 relative group transition ${
+              active === "account"
+                ? "text-blue-600"
+                : "text-gray-700"
+            }`}
           >
             <Image src={assets.user_icon} alt="user icon" />
             Account
+
+            <span
+              className={`absolute left-0 -bottom-1 h-[2px] bg-blue-600 transition-all duration-300 ease-out
+              ${active === "account" ? "w-full" : "w-0 group-hover:w-full"}`}
+            />
           </button>
         )}
       </div>
 
-      {/* Mobile Navigation */}
+      {/* Mobile */}
       <div className="flex items-center md:hidden gap-3">
         {isSeller && (
           <Link
@@ -137,8 +177,9 @@ const Navbar = () => {
             Seller Dashboard
           </Link>
         )}
+
         <Link href="/cart" className="relative cursor-pointer p-1">
-          <CartIcon className="w-8 h-8 text-gray-700 hover:text-gray-900" />
+          <CartIcon className="w-8 h-8 text-gray-700" />
           {count > 0 && (
             <span className="absolute -top-1 -right-2 bg-red-600 text-white rounded-full px-1.5 text-xs font-bold">
               {count}
@@ -146,6 +187,7 @@ const Navbar = () => {
           )}
         </Link>
       </div>
+
     </nav>
   );
 };

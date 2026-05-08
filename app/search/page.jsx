@@ -4,7 +4,6 @@ import { useAppContext } from "@/context/AppContext";
 import ProductCard from "@/components/ProductCard";
 import { useEffect, useState, Suspense } from "react";
 
-// Component that uses useSearchParams - must be wrapped in Suspense
 function SearchContent() {
   const { products } = useAppContext();
   const searchParams = useSearchParams();
