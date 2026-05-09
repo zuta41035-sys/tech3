@@ -2,8 +2,9 @@
   "name": "ecommerce-inngest",
   "version": "0.1.0",
   "private": true,
+
   "scripts": {
-    "dev": "concurrently \"next dev\" \"start http://localhost:3000\"",
+    "dev": "concurrently \"next dev\" \"node open-chrome.js\"",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
