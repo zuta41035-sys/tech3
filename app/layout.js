@@ -9,7 +9,7 @@ import Footer from "@/components/Footer";
 const outfit = Outfit({ subsets: ['latin'], weight: ["300", "400", "500"] });
 
 export const metadata = {
-  title: "Tech3 Stores",
+  title: "CoreTech",
   description: "E-Commerce with Next.js ",
 };
 

@@ -1,4 +1,4 @@
-import logo from "./logo.svg";
+import logo from "./logo.png";
 import search_icon from "./search_icon.svg";
 import delete_icon from "./delete_icon.svg";
 import user_icon from "./user_icon.svg";
@@ -38,6 +38,7 @@ import boy_with_laptop_image from "./boy_with_laptop_image.png";
 import upload_area from "./upload_area.png"
 import checkmark from "./checkmark.png";
 import keyboard_image from "./keyboard_image.png";
+import holding_Keyboard_image from "./holding_Keyboard.png";
 
 export const assets = {
   logo,
@@ -77,6 +78,7 @@ export const assets = {
   MSI_Raider_image,
   girl_with_headphone_image,
   girl_with_earphone_image,
+  holding_Keyboard_image,
   boy_with_laptop_image,
   upload_area,
   checkmark

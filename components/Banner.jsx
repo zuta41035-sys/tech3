@@ -17,7 +17,7 @@ const Banner = () => {
       />
       <div className="flex flex-col items-center justify-center text-center space-y-2 px-4 md:px-0">
         <h2 className="text-2xl md:text-3xl font-semibold max-w-[290px]">
-          Elevate Your Tech Experience with Tech3 Stores
+          Elevate Your Tech Experience with CoreTech
         </h2>
         <p className="max-w-[343px] font-medium text-gray-800/60">
           Discover the latest electronics and accessories — quality you can trust

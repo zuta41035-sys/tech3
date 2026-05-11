@@ -1,6 +1,4 @@
 import React from "react";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 
 const PrivacyPolicy = () => {
   return (
@@ -9,7 +7,7 @@ const PrivacyPolicy = () => {
         <h2 className="text-3xl font-bold mb-6 text-orange-600">Privacy Policy</h2>
 
         <p className="text-gray-700 mb-6 leading-relaxed">
-          At Tech3 Stores, your privacy is our priority. This Privacy Policy explains how we collect, use, and protect your personal information when you use our website.
+          At CoreTech, your privacy is our priority. This Privacy Policy explains how we collect, use, and protect your personal information when you use our website.
         </p>
 
         <h3 className="text-xl font-semibold mb-3">Information We Collect</h3>
