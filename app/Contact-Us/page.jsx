@@ -10,7 +10,7 @@ const ContactUs = () => {
 
       <div className="flex items-center justify-center gap-4 mb-6">
         <a
-          href="https://www.facebook.com/share/19PEvYTHmt/?mibextid=wwXIfr"
+          href="https://www.facebook.com/share/18WVRV6USZ/?mibextid=wwXIfr"
           target="_blank"
           rel="noopener noreferrer"
           className="hover:scale-110 transition-transform"
@@ -22,7 +22,7 @@ const ContactUs = () => {
           />
         </a>
         <a
-          href="https://www.twitter.com/yourhandle"
+          href="##"
           target="_blank"
           rel="noopener noreferrer"
           className="hover:scale-110 transition-transform"
@@ -34,7 +34,7 @@ const ContactUs = () => {
           />
         </a>
         <a
-          href="https://www.instagram.com/yu335ki?igsh=MTdib2NvemFzdGJ4bg%3D%3D&utm_source=qr"
+          href="##"
           target="_blank"
           rel="noopener noreferrer"
           className="hover:scale-110 transition-transform"

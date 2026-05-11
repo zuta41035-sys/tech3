@@ -6,11 +6,11 @@ const HeaderSlider = () => {
   const sliderData = [
     {
       id: 1,
-      title: "Experience Pure Sound - Your Perfect Headphones Awaits!",
+      title: "Power Meets Elegance - Apple MacBook Pro is Here for you!",
       offer: "Limited Time Offer 30% Off",
       buttonText1: "Buy now",
       buttonText2: "Find more",
-      imgSrc: assets.header_headphone_image,
+      imgSrc: assets.header_macbook_image,
     },
     {
       id: 2,
@@ -22,12 +22,20 @@ const HeaderSlider = () => {
     },
     {
       id: 3,
-      title: "Power Meets Elegance - Apple MacBook Pro is Here for you!",
+      title: "Experience Pure Sound - Your Perfect Keyboard Awaits!",
       offer: "Exclusive Deal 40% Off",
       buttonText1: "Order Now",
       buttonText2: "Learn More",
-      imgSrc: assets.header_macbook_image,
+      imgSrc: assets.keyboard_image,
     },
+      {
+    id: 4,
+    title: "Upgrade Your Setup - Premium Gaming Monitor Available Now!",
+    offer: "Special Offer Up To 50% Off",
+    buttonText1: "Shop Accessories",
+    buttonText2: "View Collection",
+    imgSrc: assets.MSI_monitor_image,
+  },
   ];
 
   const [currentSlide, setCurrentSlide] = useState(0);

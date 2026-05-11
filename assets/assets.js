@@ -37,6 +37,7 @@ import girl_with_earphone_image from "./girl_with_earphone_image.png";
 import boy_with_laptop_image from "./boy_with_laptop_image.png";
 import upload_area from "./upload_area.png"
 import checkmark from "./checkmark.png";
+import keyboard_image from "./keyboard_image.png";
 
 export const assets = {
   logo,
@@ -54,6 +55,7 @@ export const assets = {
   menu_icon,
   arrow_icon,
   increase_arrow,
+  keyboard_image,
   decrease_arrow,
   arrow_right_icon_colored,
   my_location_image,

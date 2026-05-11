@@ -1,4 +1,5 @@
 "use client";
+
 import { useAppContext } from "@/context/AppContext";
 import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
@@ -26,9 +27,12 @@ const OrderSummary = () => {
     area: "",
     city: "",
   });
+
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [userAddresses, setUserAddresses] = useState([]);
+  const [loading, setLoading] = useState(false);
 
+  // CART ITEMS
   const cartItemsList = React.useMemo(() => {
     if (!cartItems || typeof cartItems !== "object") return [];
 
@@ -36,15 +40,18 @@ const OrderSummary = () => {
       .filter((itemId) => cartItems[itemId] > 0)
       .map((itemId) => {
         const product = products.find((p) => p._id === itemId);
+
         if (!product) return null;
+
         return {
           product,
           quantity: cartItems[itemId],
         };
       })
-      .filter((item) => item !== null);
+      .filter(Boolean);
   }, [cartItems, products]);
 
+  // CLEAN INVALID PRODUCTS
   useEffect(() => {
     if (cartItems && products.length > 0 && setCartItems) {
       const cleanedCartItems = { ...cartItems };
@@ -52,7 +59,10 @@ const OrderSummary = () => {
 
       Object.keys(cartItems).forEach((itemId) => {
         if (cartItems[itemId] > 0) {
-          const productExists = products.find((p) => p._id === itemId);
+          const productExists = products.find(
+            (p) => p._id === itemId
+          );
+
           if (!productExists) {
             delete cleanedCartItems[itemId];
             hasChanges = true;
@@ -66,143 +76,193 @@ const OrderSummary = () => {
     }
   }, [cartItems, products, setCartItems]);
 
+  // LOAD ADDRESS
   useEffect(() => {
     const storedAddress = localStorage.getItem("userAddress");
+
     if (storedAddress) {
-      setUserAddresses([JSON.parse(storedAddress)]);
+      const parsedAddress = JSON.parse(storedAddress);
+
+      setUserAddresses([parsedAddress]);
+      setSelectedAddress(parsedAddress);
     }
   }, []);
 
+  // SELECT ADDRESS
   const handleAddressSelect = (address) => {
     setSelectedAddress(address);
     setIsDropdownOpen(false);
   };
 
+  // INPUT CHANGE
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+
     setSelectedAddress((prev) => ({
       ...prev,
       [name]: value,
     }));
   };
 
+  // CREATE ORDER
   const createOrder = async () => {
-    if (!user || !user.id) {
-      toast.error("User not logged in.");
-      return;
-    }
-
-    if (
-      !selectedAddress.fullName.trim() ||
-      !selectedAddress.phoneNumber.trim() ||
-      !selectedAddress.area.trim() ||
-      !selectedAddress.city.trim()
-    ) {
-      toast.error("Please complete all shipping address fields.");
-      return;
-    }
-
-    if (cartItemsList.length === 0) {
-      toast.error("Your cart is empty!");
-      return;
-    }
-
-    const totalAmount = getCartAmount();
-
-    const orderData = {
-      userId: user.id,
-      products: cartItemsList.map(({ product, quantity }) => ({
-        productId: product._id,
-        name: product.name,
-        quantity,
-        price: product.offerPrice,
-        totalPrice: product.offerPrice * quantity
-      })),
-      totalAmount: totalAmount,
-      address: {
-        fullName: selectedAddress.fullName,
-        phoneNumber: selectedAddress.phoneNumber,
-        area: selectedAddress.area,
-        city: selectedAddress.city,
-        state: "N/A",
-        country: "Cambodia"
-      },
-      paymentMethod: "COD",
-    };
-
     try {
-      const token = await getToken();
-      if (!token) {
-        toast.error("Authentication failed.");
+      if (!user || !user.id) {
+        toast.error("Please login first");
         return;
       }
 
+      if (
+        !selectedAddress.fullName.trim() ||
+        !selectedAddress.phoneNumber.trim() ||
+        !selectedAddress.area.trim() ||
+        !selectedAddress.city.trim()
+      ) {
+        toast.error("Please complete all address fields");
+        return;
+      }
+
+      if (cartItemsList.length === 0) {
+        toast.error("Your cart is empty");
+        return;
+      }
+
+      setLoading(true);
+
+      const totalAmount = getCartAmount();
+
+      // FIXED ORDER DATA
+      const orderData = {
+        products: cartItemsList.map(({ product, quantity }) => ({
+          productId: product._id,
+          name: product.name,
+          quantity,
+          price: product.offerPrice,
+          totalPrice: product.offerPrice * quantity,
+        })),
+
+        // IMPORTANT FIX
+        totalAmount: totalAmount,
+
+        address: {
+          fullName: selectedAddress.fullName,
+          phoneNumber: selectedAddress.phoneNumber,
+          area: selectedAddress.area,
+          city: selectedAddress.city,
+          state: "N/A",
+          country: "Cambodia",
+        },
+
+        paymentMethod: "COD",
+      };
+
+      console.log("Sending order:", orderData);
+
+      const token = await getToken();
+
       const res = await fetch("/api/orders", {
         method: "POST",
+
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
+
+        credentials: "include",
+
         body: JSON.stringify(orderData),
       });
 
       const data = await res.json();
 
-      if (!data.success) {
+      console.log("Order response:", data);
+
+      if (!res.ok || !data.success) {
         throw new Error(data.message || "Failed to place order");
       }
 
       await resetCart();
+
       toast.success("Order placed successfully!");
+
       router.push("/order-placed");
+
     } catch (error) {
-      console.error("Order creation error:", error);
-      toast.error(error.message || "Failed to place order");
+      console.error("Create order error:", error);
+
+      toast.error(
+        error.message || "Failed to place order"
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="w-full md:w-96 bg-gray-50 p-5 rounded-lg shadow-md">
-      <h2 className="text-xl md:text-2xl font-medium text-gray-700">Order Summary</h2>
+      <h2 className="text-xl md:text-2xl font-medium text-gray-700">
+        Order Summary
+      </h2>
+
       <hr className="border-gray-300 my-5" />
 
+      {/* ADDRESS */}
       <div className="mb-6">
-        <label className="block font-semibold mb-2">Select Address</label>
+        <label className="block font-semibold mb-2">
+          Shipping Address
+        </label>
+
         <div className="relative">
           <button
             type="button"
-            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+            onClick={() =>
+              setIsDropdownOpen(!isDropdownOpen)
+            }
             className="w-full border rounded-md p-3 text-left bg-white flex justify-between items-center"
           >
             {selectedAddress.fullName
               ? `${selectedAddress.fullName}, ${selectedAddress.area}, ${selectedAddress.city}`
               : "Select Address"}
-            <span>{isDropdownOpen ? "▲" : "▼"}</span>
+
+            <span>
+              {isDropdownOpen ? "▲" : "▼"}
+            </span>
           </button>
+
           {isDropdownOpen && (
-            <ul className="absolute bg-white border w-full mt-1 max-h-48 overflow-auto rounded-md z-10">
-              {userAddresses.length === 0 && (
-                <li className="p-2 text-gray-500">No saved addresses</li>
-              )}
-              {userAddresses.map((addr, idx) => (
-                <li
-                  key={idx}
-                  className="p-2 cursor-pointer hover:bg-gray-100"
-                  onClick={() => handleAddressSelect(addr)}
-                >
-                  {addr.fullName}, {addr.area}, {addr.city}
+            <ul className="absolute bg-white border w-full mt-1 max-h-48 overflow-auto rounded-md z-10 shadow">
+              {userAddresses.length === 0 ? (
+                <li className="p-2 text-gray-500">
+                  No saved addresses
                 </li>
-              ))}
+              ) : (
+                userAddresses.map((addr, idx) => (
+                  <li
+                    key={idx}
+                    className="p-2 cursor-pointer hover:bg-gray-100"
+                    onClick={() =>
+                      handleAddressSelect(addr)
+                    }
+                  >
+                    {addr.fullName}, {addr.area},{" "}
+                    {addr.city}
+                  </li>
+                ))
+              )}
+
               <li
                 className="p-2 text-center text-blue-600 cursor-pointer hover:bg-gray-100"
-                onClick={() => router.push("/add-address")}
+                onClick={() =>
+                  router.push("/add-address")
+                }
               >
-                + Add New Addresses
+                + Add New Address
               </li>
             </ul>
           )}
         </div>
 
+        {/* ADDRESS INPUTS */}
         <div className="mt-4 space-y-2">
           <input
             type="text"
@@ -212,6 +272,7 @@ const OrderSummary = () => {
             onChange={handleInputChange}
             className="w-full border rounded-md p-2"
           />
+
           <input
             type="text"
             name="phoneNumber"
@@ -220,6 +281,7 @@ const OrderSummary = () => {
             onChange={handleInputChange}
             className="w-full border rounded-md p-2"
           />
+
           <input
             type="text"
             name="area"
@@ -228,6 +290,7 @@ const OrderSummary = () => {
             onChange={handleInputChange}
             className="w-full border rounded-md p-2"
           />
+
           <input
             type="text"
             name="city"
@@ -239,12 +302,17 @@ const OrderSummary = () => {
         </div>
       </div>
 
-      {/* Cart items */}
+      {/* CART ITEMS */}
       <div className="mb-6">
-        <h3 className="font-semibold mb-2">Items in Cart</h3>
+        <h3 className="font-semibold mb-2">
+          Items in Cart
+        </h3>
+
         <ul className="max-h-40 overflow-auto border rounded-md bg-white">
           {cartItemsList.length === 0 ? (
-            <li className="p-2 text-gray-500">Your cart is empty</li>
+            <li className="p-2 text-gray-500">
+              Your cart is empty
+            </li>
           ) : (
             cartItemsList.map(({ product, quantity }) => (
               <li
@@ -252,28 +320,35 @@ const OrderSummary = () => {
                 className="flex justify-between px-4 py-2 border-b last:border-b-0"
               >
                 <span>{product.name}</span>
-                <span className="font-medium">x{quantity}</span>
+
+                <span className="font-medium">
+                  x{quantity}
+                </span>
               </li>
             ))
           )}
         </ul>
       </div>
 
-      {/* Price summary */}
+      {/* PRICE SUMMARY */}
       <div className="border-t pt-3 space-y-3">
         <div className="flex justify-between font-medium">
           <p>Items ({getCartCount()})</p>
+
           <p>
             {currency}
             {getCartAmount()}
           </p>
         </div>
+
         <div className="flex justify-between">
           <p>Shipping Fee</p>
           <p>Free</p>
         </div>
+
         <div className="flex justify-between font-semibold text-lg border-t pt-3">
           <p>Total</p>
+
           <p>
             {currency}
             {getCartAmount()}
@@ -281,12 +356,17 @@ const OrderSummary = () => {
         </div>
       </div>
 
+      {/* BUTTON */}
       <button
         onClick={createOrder}
-        disabled={cartItemsList.length === 0}
+        disabled={
+          cartItemsList.length === 0 || loading
+        }
         className="w-full mt-5 bg-orange-600 text-white py-3 rounded-md hover:bg-orange-700 disabled:opacity-50"
       >
-        Place Order
+        {loading
+          ? "Placing Order..."
+          : "Place Order"}
       </button>
     </div>
   );

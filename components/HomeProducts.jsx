@@ -16,7 +16,7 @@ const HomeProducts = () => {
         const res = await fetch("/api/product");
         if (!res.ok) throw new Error("Failed to fetch products");
         const data = await res.json();
-        setProducts(data.slice(0, 5));  // <-- Limit to 5 products here
+        setProducts(data.slice(0, 5)); 
       } catch (err) {
         console.error(err);
         setProducts([]);
